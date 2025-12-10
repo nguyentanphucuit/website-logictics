@@ -1,5 +1,5 @@
 import * as XLSX from 'xlsx'
-import { WarehouseReport, SupplyChainStatus } from '@/types'
+import { WarehouseReport, SupplyChainStatus, AuditLog } from '@/types'
 
 export const exportToExcel = (data: any[], filename: string) => {
   const worksheet = XLSX.utils.json_to_sheet(data)
@@ -105,6 +105,29 @@ export const exportDashboard = (stats: any, reports: WarehouseReport[], supplyCh
   XLSX.utils.book_append_sheet(workbook, supplyChainSheet, 'Chuỗi cung ứng')
   
   XLSX.writeFile(workbook, `bao-cao-tong-hop-${new Date().toISOString().split('T')[0]}.xlsx`)
+}
+
+export const exportAuditLogs = (auditLogs: AuditLog[]) => {
+  const ACTION_LABELS: Record<string, string> = {
+    create: 'Tạo mới',
+    update: 'Cập nhật',
+    delete: 'Xóa',
+    read: 'Xem',
+    export: 'Xuất file',
+    login: 'Đăng nhập',
+    logout: 'Đăng xuất',
+  }
+
+  const data = auditLogs.map((log) => ({
+    'Thời gian': new Date(log.timestamp).toLocaleString('vi-VN'),
+    'Người dùng': log.user?.fullName || `User ID: ${log.userId}`,
+    'Hành động': ACTION_LABELS[log.action] || log.action,
+    'Tài nguyên': log.resource,
+    'ID tài nguyên': log.resourceId || '-',
+    'Chi tiết': log.details || '-',
+    'IP Address': log.ipAddress || '-',
+  }))
+  exportToExcel(data, `audit-log-${new Date().toISOString().split('T')[0]}`)
 }
 
 

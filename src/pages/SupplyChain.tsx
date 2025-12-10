@@ -1,4 +1,6 @@
 import { useDataStore } from '@/store/dataStore'
+import { useAuthStore } from '@/store/authStore'
+import { useAuditStore } from '@/store/auditStore'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import {
   Table,
@@ -23,6 +25,8 @@ import { useState } from 'react'
 export default function SupplyChain() {
   const supplyChain = useDataStore((state) => state.supplyChain)
   const updateSupplyChainStatus = useDataStore((state) => state.updateSupplyChainStatus)
+  const currentUser = useAuthStore((state) => state.currentUser)
+  const addAuditLog = useAuditStore((state) => state.addAuditLog)
   const [statusFilter, setStatusFilter] = useState<string>('all')
 
   const handleExport = () => {
@@ -30,7 +34,17 @@ export default function SupplyChain() {
   }
 
   const handleStatusChange = (id: string, newStatus: string) => {
+    const item = supplyChain.find((s) => s.id === id)
     updateSupplyChainStatus(id, { status: newStatus as any })
+    if (currentUser && item) {
+      addAuditLog(
+        currentUser.id,
+        'update',
+        'supply_chain',
+        id,
+        `Cập nhật trạng thái đơn hàng ${item.orderId}: ${newStatus}`
+      )
+    }
   }
 
   const filteredSupplyChain = statusFilter === 'all' 

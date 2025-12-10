@@ -1,5 +1,7 @@
 import { useState } from 'react'
 import { useDataStore } from '@/store/dataStore'
+import { useAuthStore } from '@/store/authStore'
+import { useAuditStore } from '@/store/auditStore'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -35,6 +37,8 @@ export default function DataManagement() {
   const addProduct = useDataStore((state) => state.addProduct)
   const updateProduct = useDataStore((state) => state.updateProduct)
   const deleteProduct = useDataStore((state) => state.deleteProduct)
+  const currentUser = useAuthStore((state) => state.currentUser)
+  const addAuditLog = useAuditStore((state) => state.addAuditLog)
 
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [editingProduct, setEditingProduct] = useState<string | null>(null)
@@ -91,15 +95,43 @@ export default function DataManagement() {
     e.preventDefault()
     if (editingProduct) {
       updateProduct(editingProduct, formData)
+      if (currentUser) {
+        addAuditLog(
+          currentUser.id,
+          'update',
+          'product',
+          editingProduct,
+          `Cập nhật sản phẩm: ${formData.name} (SKU: ${formData.sku})`
+        )
+      }
     } else {
       addProduct(formData)
+      if (currentUser) {
+        addAuditLog(
+          currentUser.id,
+          'create',
+          'product',
+          undefined,
+          `Tạo sản phẩm mới: ${formData.name} (SKU: ${formData.sku})`
+        )
+      }
     }
     handleCloseDialog()
   }
 
   const handleDelete = (id: string) => {
+    const product = products.find((p) => p.id === id)
     if (confirm('Bạn có chắc chắn muốn xóa sản phẩm này?')) {
       deleteProduct(id)
+      if (currentUser && product) {
+        addAuditLog(
+          currentUser.id,
+          'delete',
+          'product',
+          id,
+          `Xóa sản phẩm: ${product.name} (SKU: ${product.sku})`
+        )
+      }
     }
   }
 

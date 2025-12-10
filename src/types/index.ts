@@ -55,4 +55,76 @@ export interface DashboardStats {
   deliveredOrders: number
 }
 
+export type Role = 'admin' | 'warehouse_manager' | 'warehouse_staff' | 'accountant'
+
+export interface Permission {
+  resource: string
+  actions: string[]
+}
+
+export interface User {
+  id: string
+  username: string
+  email: string
+  fullName: string
+  role: Role
+  isActive: boolean
+  createdAt: string
+  updatedAt: string
+}
+
+export interface AuditLog {
+  id: string
+  userId: string
+  user?: User
+  action: string
+  resource: string
+  resourceId?: string
+  details?: string
+  ipAddress?: string
+  userAgent?: string
+  timestamp: string
+}
+
+export const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
+  admin: [
+    { resource: '*', actions: ['*'] }, // Tất cả quyền
+  ],
+  warehouse_manager: [
+    { resource: 'products', actions: ['read', 'create', 'update'] },
+    { resource: 'inventory', actions: ['read', 'create', 'update'] },
+    { resource: 'warehouse_reports', actions: ['read', 'export'] },
+    { resource: 'supply_chain', actions: ['read', 'update'] },
+    { resource: 'reports', actions: ['read', 'export'] },
+  ],
+  warehouse_staff: [
+    { resource: 'products', actions: ['read'] },
+    { resource: 'inventory', actions: ['read', 'update'] },
+    { resource: 'warehouse_reports', actions: ['read'] },
+    { resource: 'supply_chain', actions: ['read'] },
+  ],
+  accountant: [
+    { resource: 'products', actions: ['read'] },
+    { resource: 'inventory', actions: ['read'] },
+    { resource: 'warehouse_reports', actions: ['read', 'export'] },
+    { resource: 'supply_chain', actions: ['read'] },
+    { resource: 'reports', actions: ['read', 'export'] },
+  ],
+}
+
+// Thêm quyền audit_log cho admin
+export const ROLE_PERMISSIONS_WITH_AUDIT: Record<Role, Permission[]> = {
+  ...ROLE_PERMISSIONS,
+  admin: [
+    ...ROLE_PERMISSIONS.admin,
+    { resource: 'audit_log', actions: ['read', 'export'] },
+    { resource: 'users', actions: ['*'] },
+  ],
+  warehouse_manager: [
+    ...ROLE_PERMISSIONS.warehouse_manager,
+    { resource: 'audit_log', actions: ['read'] },
+  ],
+}
+
+
 
