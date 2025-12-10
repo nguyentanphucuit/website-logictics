@@ -32,16 +32,17 @@ export default function Reports() {
 
   return (
     <div>
-      <div className="mb-8 flex justify-between items-center">
+      <div className="mb-4 sm:mb-8 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Báo cáo & Dashboard</h1>
-          <p className="mt-2 text-sm text-gray-600">
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Báo cáo & Dashboard</h1>
+          <p className="mt-2 text-xs sm:text-sm text-gray-600">
             Xem và xuất báo cáo tổng hợp
           </p>
         </div>
-        <Button onClick={handleExportDashboard}>
+        <Button onClick={handleExportDashboard} className="w-full sm:w-auto">
           <FileSpreadsheet className="mr-2 h-4 w-4" />
-          Xuất tất cả báo cáo
+          <span className="hidden sm:inline">Xuất tất cả báo cáo</span>
+          <span className="sm:hidden">Xuất tất cả</span>
         </Button>
       </div>
 
@@ -197,50 +198,52 @@ export default function Reports() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>SKU</TableHead>
-                    <TableHead>Tên sản phẩm</TableHead>
-                    <TableHead className="text-right">Tồn kho</TableHead>
-                    <TableHead>Trạng thái</TableHead>
-                    <TableHead>Vị trí</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {reports.map((report) => (
-                    <TableRow key={report.id}>
-                      <TableCell className="font-medium">{report.product.sku}</TableCell>
-                      <TableCell>{report.product.name}</TableCell>
-                      <TableCell className="text-right">
-                        {report.currentStock} {report.product.unit}
-                      </TableCell>
-                      <TableCell>
-                        <span
-                          className={`text-xs px-2 py-1 rounded ${
-                            report.status === 'in_stock'
-                              ? 'bg-green-100 text-green-800'
-                              : report.status === 'low_stock'
-                              ? 'bg-orange-100 text-orange-800'
-                              : report.status === 'out_of_stock'
-                              ? 'bg-red-100 text-red-800'
-                              : 'bg-gray-100 text-gray-800'
-                          }`}
-                        >
-                          {report.status === 'in_stock'
-                            ? 'Còn hàng'
-                            : report.status === 'low_stock'
-                            ? 'Sắp hết'
-                            : report.status === 'out_of_stock'
-                            ? 'Hết hàng'
-                            : 'Tồn kho cao'}
-                        </span>
-                      </TableCell>
-                      <TableCell>{report.location}</TableCell>
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="min-w-[120px]">SKU</TableHead>
+                      <TableHead className="min-w-[150px]">Tên sản phẩm</TableHead>
+                      <TableHead className="text-right min-w-[100px]">Tồn kho</TableHead>
+                      <TableHead className="min-w-[100px]">Trạng thái</TableHead>
+                      <TableHead className="hidden md:table-cell min-w-[120px]">Vị trí</TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                  </TableHeader>
+                  <TableBody>
+                    {reports.map((report) => (
+                      <TableRow key={report.id}>
+                        <TableCell className="font-medium">{report.product.sku}</TableCell>
+                        <TableCell>{report.product.name}</TableCell>
+                        <TableCell className="text-right">
+                          {report.currentStock} {report.product.unit}
+                        </TableCell>
+                        <TableCell>
+                          <span
+                            className={`text-xs px-2 py-1 rounded ${
+                              report.status === 'in_stock'
+                                ? 'bg-green-100 text-green-800'
+                                : report.status === 'low_stock'
+                                ? 'bg-orange-100 text-orange-800'
+                                : report.status === 'out_of_stock'
+                                ? 'bg-red-100 text-red-800'
+                                : 'bg-gray-100 text-gray-800'
+                            }`}
+                          >
+                            {report.status === 'in_stock'
+                              ? 'Còn hàng'
+                              : report.status === 'low_stock'
+                              ? 'Sắp hết'
+                              : report.status === 'out_of_stock'
+                              ? 'Hết hàng'
+                              : 'Tồn kho cao'}
+                          </span>
+                        </TableCell>
+                        <TableCell className="hidden md:table-cell">{report.location}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
             </CardContent>
           </Card>
         </TabsContent>
@@ -254,52 +257,54 @@ export default function Reports() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Mã đơn hàng</TableHead>
-                    <TableHead>Sản phẩm</TableHead>
-                    <TableHead>Nhà cung cấp</TableHead>
-                    <TableHead className="text-right">Số lượng</TableHead>
-                    <TableHead>Trạng thái</TableHead>
-                    <TableHead>Ngày đặt hàng</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {supplyChain.map((item) => (
-                    <TableRow key={item.id}>
-                      <TableCell className="font-medium">{item.orderId}</TableCell>
-                      <TableCell>{item.product.name}</TableCell>
-                      <TableCell>{item.supplier}</TableCell>
-                      <TableCell className="text-right">{item.quantity}</TableCell>
-                      <TableCell>
-                        <span
-                          className={`text-xs px-2 py-1 rounded ${
-                            item.status === 'pending'
-                              ? 'bg-yellow-100 text-yellow-800'
-                              : item.status === 'in_transit'
-                              ? 'bg-blue-100 text-blue-800'
-                              : item.status === 'delivered'
-                              ? 'bg-green-100 text-green-800'
-                              : 'bg-red-100 text-red-800'
-                          }`}
-                        >
-                          {item.status === 'pending'
-                            ? 'Chờ xử lý'
-                            : item.status === 'in_transit'
-                            ? 'Đang vận chuyển'
-                            : item.status === 'delivered'
-                            ? 'Đã giao'
-                            : 'Đã hủy'}
-                        </span>
-                      </TableCell>
-                      <TableCell>
-                        {new Date(item.orderDate).toLocaleDateString('vi-VN')}
-                      </TableCell>
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="min-w-[100px]">Mã đơn hàng</TableHead>
+                      <TableHead className="min-w-[120px]">Sản phẩm</TableHead>
+                      <TableHead className="hidden md:table-cell min-w-[120px]">Nhà cung cấp</TableHead>
+                      <TableHead className="text-right min-w-[80px]">Số lượng</TableHead>
+                      <TableHead className="min-w-[100px]">Trạng thái</TableHead>
+                      <TableHead className="hidden lg:table-cell min-w-[100px]">Ngày đặt hàng</TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                  </TableHeader>
+                  <TableBody>
+                    {supplyChain.map((item) => (
+                      <TableRow key={item.id}>
+                        <TableCell className="font-medium">{item.orderId}</TableCell>
+                        <TableCell>{item.product.name}</TableCell>
+                        <TableCell className="hidden md:table-cell">{item.supplier}</TableCell>
+                        <TableCell className="text-right">{item.quantity}</TableCell>
+                        <TableCell>
+                          <span
+                            className={`text-xs px-2 py-1 rounded ${
+                              item.status === 'pending'
+                                ? 'bg-yellow-100 text-yellow-800'
+                                : item.status === 'in_transit'
+                                ? 'bg-blue-100 text-blue-800'
+                                : item.status === 'delivered'
+                                ? 'bg-green-100 text-green-800'
+                                : 'bg-red-100 text-red-800'
+                            }`}
+                          >
+                            {item.status === 'pending'
+                              ? 'Chờ xử lý'
+                              : item.status === 'in_transit'
+                              ? 'Đang vận chuyển'
+                              : item.status === 'delivered'
+                              ? 'Đã giao'
+                              : 'Đã hủy'}
+                          </span>
+                        </TableCell>
+                        <TableCell className="hidden lg:table-cell">
+                          {new Date(item.orderDate).toLocaleDateString('vi-VN')}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
             </CardContent>
           </Card>
         </TabsContent>

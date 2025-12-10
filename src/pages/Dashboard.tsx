@@ -1,5 +1,5 @@
 import { useDataStore } from '@/store/dataStore'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Package, AlertTriangle, Truck, CheckCircle, Clock, TrendingUp } from 'lucide-react'
 
 export default function Dashboard() {
@@ -52,9 +52,9 @@ export default function Dashboard() {
 
   return (
     <div>
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">Bảng điều khiển</h1>
-        <p className="mt-2 text-sm text-gray-600">
+      <div className="mb-4 sm:mb-8">
+        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Bảng điều khiển</h1>
+        <p className="mt-2 text-xs sm:text-sm text-gray-600">
           Tổng quan hệ thống quản lý kho & chuỗi cung ứng
         </p>
       </div>
@@ -65,13 +65,13 @@ export default function Dashboard() {
           return (
             <Card key={stat.title}>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">{stat.title}</CardTitle>
-                <div className={`${stat.bgColor} ${stat.color} p-2 rounded-lg`}>
-                  <Icon className="h-4 w-4" />
+                <CardTitle className="text-xs sm:text-sm font-medium">{stat.title}</CardTitle>
+                <div className={`${stat.bgColor} ${stat.color} p-1.5 sm:p-2 rounded-lg`}>
+                  <Icon className="h-3 w-3 sm:h-4 sm:w-4" />
                 </div>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{stat.value}</div>
+                <div className="text-xl sm:text-2xl font-bold">{stat.value}</div>
               </CardContent>
             </Card>
           )

@@ -11,7 +11,6 @@ import {
 import { Button } from '@/components/ui/button'
 import { Download } from 'lucide-react'
 import { exportSupplyChain } from '@/lib/excelExport'
-import { Badge } from '@/components/ui/badge'
 import {
   Select,
   SelectContent,
@@ -20,28 +19,6 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { useState } from 'react'
-
-function getStatusBadge(status: string) {
-  const variants: Record<string, string> = {
-    pending: 'secondary',
-    in_transit: 'default',
-    delivered: 'outline',
-    cancelled: 'destructive',
-  }
-  
-  const labels: Record<string, string> = {
-    pending: 'Chờ xử lý',
-    in_transit: 'Đang vận chuyển',
-    delivered: 'Đã giao',
-    cancelled: 'Đã hủy',
-  }
-
-  return (
-    <Badge variant={variants[status] as any}>
-      {labels[status] || status}
-    </Badge>
-  )
-}
 
 export default function SupplyChain() {
   const supplyChain = useDataStore((state) => state.supplyChain)
@@ -70,24 +47,25 @@ export default function SupplyChain() {
 
   return (
     <div>
-      <div className="mb-8 flex justify-between items-center">
+      <div className="mb-4 sm:mb-8 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Phân tích chuỗi cung ứng</h1>
-          <p className="mt-2 text-sm text-gray-600">
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Phân tích chuỗi cung ứng</h1>
+          <p className="mt-2 text-xs sm:text-sm text-gray-600">
             Theo dõi trạng thái đơn hàng và chuỗi cung ứng
           </p>
         </div>
-        <Button onClick={handleExport}>
+        <Button onClick={handleExport} className="w-full sm:w-auto">
           <Download className="mr-2 h-4 w-4" />
-          Xuất Excel
+          <span className="hidden sm:inline">Xuất Excel</span>
+          <span className="sm:hidden">Xuất</span>
         </Button>
       </div>
 
-      <div className="mb-6 flex gap-4 items-center">
-        <div className="flex items-center gap-2">
-          <span className="text-sm font-medium">Lọc theo trạng thái:</span>
+      <div className="mb-4 sm:mb-6 flex flex-col sm:flex-row gap-2 sm:gap-4 items-stretch sm:items-center">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 w-full sm:w-auto">
+          <span className="text-xs sm:text-sm font-medium whitespace-nowrap">Lọc theo trạng thái:</span>
           <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="w-[200px]">
+            <SelectTrigger className="w-full sm:w-[200px]">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -109,71 +87,73 @@ export default function SupplyChain() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Mã đơn hàng</TableHead>
-                <TableHead>Sản phẩm</TableHead>
-                <TableHead>SKU</TableHead>
-                <TableHead>Nhà cung cấp</TableHead>
-                <TableHead className="text-right">Số lượng</TableHead>
-                <TableHead>Ngày đặt hàng</TableHead>
-                <TableHead>Ngày dự kiến</TableHead>
-                <TableHead>Ngày thực tế</TableHead>
-                <TableHead>Trạng thái</TableHead>
-                <TableHead>Ghi chú</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredSupplyChain.length === 0 ? (
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
                 <TableRow>
-                  <TableCell colSpan={10} className="text-center text-gray-500">
-                    Chưa có dữ liệu chuỗi cung ứng
-                  </TableCell>
+                  <TableHead className="min-w-[100px]">Mã đơn hàng</TableHead>
+                  <TableHead className="min-w-[120px]">Sản phẩm</TableHead>
+                  <TableHead className="hidden md:table-cell min-w-[120px]">SKU</TableHead>
+                  <TableHead className="min-w-[120px]">Nhà cung cấp</TableHead>
+                  <TableHead className="text-right min-w-[80px]">Số lượng</TableHead>
+                  <TableHead className="hidden lg:table-cell min-w-[100px]">Ngày đặt hàng</TableHead>
+                  <TableHead className="hidden lg:table-cell min-w-[100px]">Ngày dự kiến</TableHead>
+                  <TableHead className="hidden xl:table-cell min-w-[100px]">Ngày thực tế</TableHead>
+                  <TableHead className="min-w-[140px]">Trạng thái</TableHead>
+                  <TableHead className="hidden xl:table-cell min-w-[120px]">Ghi chú</TableHead>
                 </TableRow>
-              ) : (
-                filteredSupplyChain.map((item) => (
-                  <TableRow key={item.id}>
-                    <TableCell className="font-medium">{item.orderId}</TableCell>
-                    <TableCell>{item.product.name}</TableCell>
-                    <TableCell>{item.product.sku}</TableCell>
-                    <TableCell>{item.supplier}</TableCell>
-                    <TableCell className="text-right">{item.quantity}</TableCell>
-                    <TableCell>
-                      {new Date(item.orderDate).toLocaleDateString('vi-VN')}
-                    </TableCell>
-                    <TableCell>
-                      {new Date(item.expectedDate).toLocaleDateString('vi-VN')}
-                    </TableCell>
-                    <TableCell>
-                      {item.actualDate
-                        ? new Date(item.actualDate).toLocaleDateString('vi-VN')
-                        : '-'}
-                    </TableCell>
-                    <TableCell>
-                      <Select
-                        value={item.status}
-                        onValueChange={(value) => handleStatusChange(item.id, value)}
-                      >
-                        <SelectTrigger className="w-[150px]">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="pending">Chờ xử lý</SelectItem>
-                          <SelectItem value="in_transit">Đang vận chuyển</SelectItem>
-                          <SelectItem value="delivered">Đã giao</SelectItem>
-                          <SelectItem value="cancelled">Đã hủy</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </TableCell>
-                    <TableCell className="max-w-xs truncate">
-                      {item.notes || '-'}
+              </TableHeader>
+              <TableBody>
+                {filteredSupplyChain.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={10} className="text-center text-gray-500">
+                      Chưa có dữ liệu chuỗi cung ứng
                     </TableCell>
                   </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
+                ) : (
+                  filteredSupplyChain.map((item) => (
+                    <TableRow key={item.id}>
+                      <TableCell className="font-medium">{item.orderId}</TableCell>
+                      <TableCell>{item.product.name}</TableCell>
+                      <TableCell className="hidden md:table-cell">{item.product.sku}</TableCell>
+                      <TableCell className="truncate max-w-[120px]">{item.supplier}</TableCell>
+                      <TableCell className="text-right">{item.quantity}</TableCell>
+                      <TableCell className="hidden lg:table-cell">
+                        {new Date(item.orderDate).toLocaleDateString('vi-VN')}
+                      </TableCell>
+                      <TableCell className="hidden lg:table-cell">
+                        {new Date(item.expectedDate).toLocaleDateString('vi-VN')}
+                      </TableCell>
+                      <TableCell className="hidden xl:table-cell">
+                        {item.actualDate
+                          ? new Date(item.actualDate).toLocaleDateString('vi-VN')
+                          : '-'}
+                      </TableCell>
+                      <TableCell>
+                        <Select
+                          value={item.status}
+                          onValueChange={(value) => handleStatusChange(item.id, value)}
+                        >
+                          <SelectTrigger className="w-full sm:w-[150px]">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="pending">Chờ xử lý</SelectItem>
+                            <SelectItem value="in_transit">Đang vận chuyển</SelectItem>
+                            <SelectItem value="delivered">Đã giao</SelectItem>
+                            <SelectItem value="cancelled">Đã hủy</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </TableCell>
+                      <TableCell className="hidden xl:table-cell max-w-xs truncate">
+                        {item.notes || '-'}
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </div>
         </CardContent>
       </Card>
     </div>

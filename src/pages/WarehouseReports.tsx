@@ -44,14 +44,14 @@ export default function WarehouseReports() {
 
   return (
     <div>
-      <div className="mb-8 flex justify-between items-center">
+      <div className="mb-4 sm:mb-8 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Báo cáo kho</h1>
-          <p className="mt-2 text-sm text-gray-600">
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Báo cáo kho</h1>
+          <p className="mt-2 text-xs sm:text-sm text-gray-600">
             Xem tình trạng tồn kho và cảnh báo mức tồn kho
           </p>
         </div>
-        <Button onClick={handleExport}>
+        <Button onClick={handleExport} className="w-full sm:w-auto">
           <Download className="mr-2 h-4 w-4" />
           Xuất Excel
         </Button>
@@ -65,48 +65,50 @@ export default function WarehouseReports() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>SKU</TableHead>
-                <TableHead>Tên sản phẩm</TableHead>
-                <TableHead>Danh mục</TableHead>
-                <TableHead className="text-right">Tồn kho hiện tại</TableHead>
-                <TableHead className="text-right">Tồn kho tối thiểu</TableHead>
-                <TableHead className="text-right">Tồn kho tối đa</TableHead>
-                <TableHead>Trạng thái</TableHead>
-                <TableHead>Vị trí</TableHead>
-                <TableHead>Cập nhật lần cuối</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {reports.length === 0 ? (
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
                 <TableRow>
-                  <TableCell colSpan={9} className="text-center text-gray-500">
-                    Chưa có dữ liệu tồn kho
-                  </TableCell>
+                  <TableHead className="min-w-[120px]">SKU</TableHead>
+                  <TableHead className="min-w-[150px]">Tên sản phẩm</TableHead>
+                  <TableHead className="hidden md:table-cell min-w-[100px]">Danh mục</TableHead>
+                  <TableHead className="text-right min-w-[100px]">Tồn kho hiện tại</TableHead>
+                  <TableHead className="text-right hidden lg:table-cell min-w-[100px]">Tồn kho tối thiểu</TableHead>
+                  <TableHead className="text-right hidden lg:table-cell min-w-[100px]">Tồn kho tối đa</TableHead>
+                  <TableHead className="min-w-[100px]">Trạng thái</TableHead>
+                  <TableHead className="hidden md:table-cell min-w-[120px]">Vị trí</TableHead>
+                  <TableHead className="hidden xl:table-cell min-w-[120px]">Cập nhật lần cuối</TableHead>
                 </TableRow>
-              ) : (
-                reports.map((report) => (
-                  <TableRow key={report.id}>
-                    <TableCell className="font-medium">{report.product.sku}</TableCell>
-                    <TableCell>{report.product.name}</TableCell>
-                    <TableCell>{report.product.category}</TableCell>
-                    <TableCell className="text-right font-medium">
-                      {report.currentStock} {report.product.unit}
-                    </TableCell>
-                    <TableCell className="text-right">{report.minStock}</TableCell>
-                    <TableCell className="text-right">{report.maxStock}</TableCell>
-                    <TableCell>{getStatusBadge(report.status)}</TableCell>
-                    <TableCell>{report.location}</TableCell>
-                    <TableCell>
-                      {new Date(report.lastMovement).toLocaleDateString('vi-VN')}
+              </TableHeader>
+              <TableBody>
+                {reports.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={9} className="text-center text-gray-500">
+                      Chưa có dữ liệu tồn kho
                     </TableCell>
                   </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
+                ) : (
+                  reports.map((report) => (
+                    <TableRow key={report.id}>
+                      <TableCell className="font-medium">{report.product.sku}</TableCell>
+                      <TableCell>{report.product.name}</TableCell>
+                      <TableCell className="hidden md:table-cell">{report.product.category}</TableCell>
+                      <TableCell className="text-right font-medium">
+                        {report.currentStock} {report.product.unit}
+                      </TableCell>
+                      <TableCell className="text-right hidden lg:table-cell">{report.minStock}</TableCell>
+                      <TableCell className="text-right hidden lg:table-cell">{report.maxStock}</TableCell>
+                      <TableCell>{getStatusBadge(report.status)}</TableCell>
+                      <TableCell className="hidden md:table-cell">{report.location}</TableCell>
+                      <TableCell className="hidden xl:table-cell">
+                        {new Date(report.lastMovement).toLocaleDateString('vi-VN')}
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </div>
         </CardContent>
       </Card>
     </div>

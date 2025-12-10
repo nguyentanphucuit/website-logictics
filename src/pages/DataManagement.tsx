@@ -105,16 +105,16 @@ export default function DataManagement() {
 
   return (
     <div>
-      <div className="mb-8 flex justify-between items-center">
+      <div className="mb-4 sm:mb-8 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Quản lý dữ liệu</h1>
-          <p className="mt-2 text-sm text-gray-600">
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Quản lý dữ liệu</h1>
+          <p className="mt-2 text-xs sm:text-sm text-gray-600">
             Thêm, sửa, xóa sản phẩm trong hệ thống
           </p>
         </div>
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
-            <Button onClick={() => handleOpenDialog()}>
+            <Button onClick={() => handleOpenDialog()} className="w-full sm:w-auto">
               <Plus className="mr-2 h-4 w-4" />
               Thêm sản phẩm
             </Button>
@@ -148,7 +148,7 @@ export default function DataManagement() {
                     required
                   />
                 </div>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="grid gap-2">
                     <Label htmlFor="category">Danh mục *</Label>
                     <Select
@@ -222,57 +222,59 @@ export default function DataManagement() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>SKU</TableHead>
-                <TableHead>Tên sản phẩm</TableHead>
-                <TableHead>Danh mục</TableHead>
-                <TableHead>Đơn vị</TableHead>
-                <TableHead>Mô tả</TableHead>
-                <TableHead className="text-right">Thao tác</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {products.length === 0 ? (
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center text-gray-500">
-                    Chưa có sản phẩm nào. Hãy thêm sản phẩm mới.
-                  </TableCell>
+                  <TableHead className="min-w-[120px]">SKU</TableHead>
+                  <TableHead className="min-w-[150px]">Tên sản phẩm</TableHead>
+                  <TableHead className="hidden md:table-cell min-w-[100px]">Danh mục</TableHead>
+                  <TableHead className="hidden lg:table-cell min-w-[80px]">Đơn vị</TableHead>
+                  <TableHead className="hidden xl:table-cell min-w-[150px]">Mô tả</TableHead>
+                  <TableHead className="text-right min-w-[100px]">Thao tác</TableHead>
                 </TableRow>
-              ) : (
-                products.map((product) => (
-                  <TableRow key={product.id}>
-                    <TableCell className="font-medium">{product.sku}</TableCell>
-                    <TableCell>{product.name}</TableCell>
-                    <TableCell>{product.category}</TableCell>
-                    <TableCell>{product.unit}</TableCell>
-                    <TableCell className="max-w-xs truncate">
-                      {product.description || '-'}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex justify-end gap-2">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleOpenDialog(product.id)}
-                        >
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleDelete(product.id)}
-                        >
-                          <Trash2 className="h-4 w-4 text-destructive" />
-                        </Button>
-                      </div>
+              </TableHeader>
+              <TableBody>
+                {products.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={6} className="text-center text-gray-500">
+                      Chưa có sản phẩm nào. Hãy thêm sản phẩm mới.
                     </TableCell>
                   </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
+                ) : (
+                  products.map((product) => (
+                    <TableRow key={product.id}>
+                      <TableCell className="font-medium">{product.sku}</TableCell>
+                      <TableCell>{product.name}</TableCell>
+                      <TableCell className="hidden md:table-cell">{product.category}</TableCell>
+                      <TableCell className="hidden lg:table-cell">{product.unit}</TableCell>
+                      <TableCell className="hidden xl:table-cell max-w-xs truncate">
+                        {product.description || '-'}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <div className="flex justify-end gap-2">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleOpenDialog(product.id)}
+                          >
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleDelete(product.id)}
+                          >
+                            <Trash2 className="h-4 w-4 text-destructive" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </div>
         </CardContent>
       </Card>
     </div>
