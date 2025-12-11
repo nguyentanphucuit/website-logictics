@@ -8,6 +8,7 @@ import SupplyChain from './pages/SupplyChain'
 import Reports from './pages/Reports'
 import UserManagement from './pages/UserManagement'
 import AuditLog from './pages/AuditLog'
+import DemandForecast from './pages/DemandForecast'
 import ProtectedRoute from './components/ProtectedRoute'
 import { useAuthStore } from './store/authStore'
 
@@ -98,6 +99,18 @@ function AppRoutes() {
           >
             <Layout>
               <AuditLog />
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/demand-forecast"
+        element={
+          <ProtectedRoute
+            requiredPermission={{ resource: 'demand_forecast', action: 'read' }}
+          >
+            <Layout>
+              <DemandForecast />
             </Layout>
           </ProtectedRoute>
         }

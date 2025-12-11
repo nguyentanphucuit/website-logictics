@@ -96,6 +96,7 @@ export const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
     { resource: 'warehouse_reports', actions: ['read', 'export'] },
     { resource: 'supply_chain', actions: ['read', 'update'] },
     { resource: 'reports', actions: ['read', 'export'] },
+    { resource: 'demand_forecast', actions: ['read', 'create', 'update'] },
   ],
   warehouse_staff: [
     { resource: 'products', actions: ['read'] },
@@ -109,6 +110,7 @@ export const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
     { resource: 'warehouse_reports', actions: ['read', 'export'] },
     { resource: 'supply_chain', actions: ['read'] },
     { resource: 'reports', actions: ['read', 'export'] },
+    { resource: 'demand_forecast', actions: ['read'] },
   ],
 }
 
@@ -124,6 +126,77 @@ export const ROLE_PERMISSIONS_WITH_AUDIT: Record<Role, Permission[]> = {
     ...ROLE_PERMISSIONS.warehouse_manager,
     { resource: 'audit_log', actions: ['read'] },
   ],
+}
+
+// Demand Forecasting Types
+export type CustomerSegment = 'short_term' | 'long_term' | 'new'
+export type CustomerType = 'vip' | 'regular' | 'potential'
+
+export interface Customer {
+  id: string
+  name: string
+  email?: string
+  phone?: string
+  company?: string
+  address?: string
+  customerType: CustomerType
+  segment: CustomerSegment
+  firstPurchaseDate: string
+  lastPurchaseDate: string
+  totalOrders: number
+  totalSpent: number
+  averageOrderValue: number
+  createdAt: string
+  updatedAt: string
+}
+
+export interface Order {
+  id: string
+  customerId: string
+  customer?: Customer
+  orderDate: string
+  totalAmount: number
+  status: 'pending' | 'processing' | 'completed' | 'cancelled'
+  items: OrderItem[]
+  notes?: string
+}
+
+export interface OrderItem {
+  id: string
+  orderId: string
+  productId: string
+  product?: Product
+  quantity: number
+  unitPrice: number
+  totalPrice: number
+}
+
+export interface ProductPrediction {
+  productId: string
+  product?: Product
+  predictedDemand: number
+  confidence: number // 0-1
+  predictedCategories?: string[]
+  predictedNextPurchase?: string // ISO date
+}
+
+export interface FutureProductPrediction {
+  category: string
+  predictedProducts: string[]
+  confidence: number
+  timeframe: 'short_term' | 'medium_term' | 'long_term'
+  reasoning?: string
+}
+
+export interface DemandForecast {
+  customerId: string
+  customer?: Customer
+  predictedProducts: ProductPrediction[]
+  predictedServices: string[]
+  confidenceScore: number
+  nextPurchaseProbability: number
+  predictedPurchaseDate?: string
+  lastUpdated: string
 }
 
 
