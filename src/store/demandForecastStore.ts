@@ -2,13 +2,10 @@ import { create } from 'zustand'
 import {
   Customer,
   Order,
-  OrderItem,
-  Product,
   ProductPrediction,
   FutureProductPrediction,
   DemandForecast,
   CustomerSegment,
-  CustomerType,
 } from '@/types'
 import { useDataStore } from './dataStore'
 
@@ -481,11 +478,9 @@ export const useDemandForecastStore = create<DemandForecastStore>((set, get) => 
   predictNewProductTypes: (): FutureProductPrediction[] => {
     const orders = get().orders
     const products = useDataStore.getState().products
-    const customers = get().customers
     
     // Analyze trends
     const categoryTrends: Record<string, number> = {}
-    const emergingCategories: Record<string, number> = {}
     
     orders.forEach((order) => {
       order.items.forEach((item) => {

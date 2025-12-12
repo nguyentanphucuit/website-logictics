@@ -9,6 +9,7 @@ import Reports from './pages/Reports'
 import UserManagement from './pages/UserManagement'
 import AuditLog from './pages/AuditLog'
 import DemandForecast from './pages/DemandForecast'
+import ARVRTracking from './pages/ARVRTracking'
 import ProtectedRoute from './components/ProtectedRoute'
 import { useAuthStore } from './store/authStore'
 
@@ -111,6 +112,18 @@ function AppRoutes() {
           >
             <Layout>
               <DemandForecast />
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/ar-vr-tracking"
+        element={
+          <ProtectedRoute
+            requiredPermission={{ resource: 'supply_chain', action: 'read' }}
+          >
+            <Layout>
+              <ARVRTracking />
             </Layout>
           </ProtectedRoute>
         }

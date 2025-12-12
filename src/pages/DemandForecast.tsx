@@ -38,16 +38,13 @@ import {
   Plus,
   Target,
   Clock,
-  Calendar,
   Star,
-  Zap,
   Sparkles,
 } from 'lucide-react'
 import { format } from 'date-fns'
 
 export default function DemandForecast() {
   const customers = useDemandForecastStore((state) => state.customers)
-  const orders = useDemandForecastStore((state) => state.orders)
   const products = useDataStore((state) => state.products)
   const addCustomer = useDemandForecastStore((state) => state.addCustomer)
   const addOrder = useDemandForecastStore((state) => state.addOrder)

@@ -100,6 +100,23 @@ const initialSupplyChain: SupplyChainStatus[] = [
     orderDate: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
     expectedDate: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString(),
     notes: 'Dự kiến giao hàng trong 2 ngày',
+    originLocation: {
+      lat: 10.8231,
+      lng: 106.6297,
+      address: 'TP. Hồ Chí Minh',
+    },
+    destinationLocation: {
+      lat: 21.0285,
+      lng: 105.8542,
+      address: 'Hà Nội',
+    },
+    currentLocation: {
+      lat: 15.9265,
+      lng: 108.2307,
+      address: 'Đang vận chuyển',
+    },
+    progress: 45,
+    estimatedTimeRemaining: 36,
   },
   {
     id: '2',
@@ -113,6 +130,17 @@ const initialSupplyChain: SupplyChainStatus[] = [
     expectedDate: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
     actualDate: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
     notes: 'Giao hàng đúng hạn',
+    originLocation: {
+      lat: 10.8231,
+      lng: 106.6297,
+      address: 'TP. Hồ Chí Minh',
+    },
+    destinationLocation: {
+      lat: 20.8449,
+      lng: 106.6881,
+      address: 'Hải Phòng',
+    },
+    progress: 100,
   },
   {
     id: '3',
@@ -125,6 +153,18 @@ const initialSupplyChain: SupplyChainStatus[] = [
     orderDate: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
     expectedDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
     notes: 'Đang chờ xác nhận',
+    originLocation: {
+      lat: 16.0544,
+      lng: 108.2022,
+      address: 'Đà Nẵng',
+    },
+    destinationLocation: {
+      lat: 10.8231,
+      lng: 106.6297,
+      address: 'TP. Hồ Chí Minh',
+    },
+    progress: 0,
+    estimatedTimeRemaining: 168,
   },
 ]
 

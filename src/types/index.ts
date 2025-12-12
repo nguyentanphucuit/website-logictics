@@ -32,6 +32,24 @@ export interface SupplyChainStatus {
   expectedDate: string
   actualDate?: string
   notes?: string
+  // AR/VR Tracking fields
+  currentLocation?: {
+    lat: number
+    lng: number
+    address?: string
+  }
+  originLocation?: {
+    lat: number
+    lng: number
+    address?: string
+  }
+  destinationLocation?: {
+    lat: number
+    lng: number
+    address?: string
+  }
+  progress?: number // 0-100 percentage
+  estimatedTimeRemaining?: number // in hours
 }
 
 export interface WarehouseReport {
