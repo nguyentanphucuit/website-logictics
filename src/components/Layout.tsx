@@ -13,7 +13,7 @@ import {
   ChevronLeft,
   ChevronRight,
   TrendingUp,
-  // Eye,
+  Eye,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useState } from 'react'
@@ -30,7 +30,7 @@ const navigationItems = [
   { name: 'Quản lý dữ liệu', href: '/data-management', icon: Package, permission: { resource: 'products', action: 'read' } },
   { name: 'Báo cáo kho', href: '/warehouse-reports', icon: BarChart3, permission: { resource: 'warehouse_reports', action: 'read' } },
   { name: 'Chuỗi cung ứng', href: '/supply-chain', icon: Network, permission: { resource: 'supply_chain', action: 'read' } },
-  // { name: 'AR/VR Vận chuyển', href: '/ar-vr-tracking', icon: Eye, permission: { resource: 'supply_chain', action: 'read' } },
+  { name: 'AR/VR Vận chuyển', href: '/ar-vr-tracking', icon: Eye, permission: { resource: 'supply_chain', action: 'read' } },
   { name: 'Dự báo nhu cầu', href: '/demand-forecast', icon: TrendingUp, permission: { resource: 'demand_forecast', action: 'read' } },
   { name: 'Báo cáo & Tổng quan', href: '/reports', icon: FileText, permission: { resource: 'reports', action: 'read' } },
 ]
