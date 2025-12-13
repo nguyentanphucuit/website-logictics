@@ -16,12 +16,10 @@ import {
   Maximize2,
   Tag,
   CheckCircle,
-  ArrowRight,
   Box,
   Play,
   Pause,
 } from 'lucide-react'
-import { format } from 'date-fns'
 
 interface BoxItem {
   id: string
@@ -81,9 +79,8 @@ export default function ARVRTracking() {
     }
   }, [selectedOrder, supplyChain])
 
-  // Lấy 2 thùng hàng hiện tại để hiển thị (current và next)
+  // Lấy thùng hàng hiện tại
   const currentBox = boxes[currentBoxIndex]
-  const nextBox = boxes[currentBoxIndex + 1]
   const processedCount = boxes.filter((b) => b.hasLabel).length
   const totalBoxes = boxes.length
   const progress = totalBoxes > 0 ? Math.round((processedCount / totalBoxes) * 100) : 0
@@ -163,101 +160,6 @@ export default function ARVRTracking() {
     if (currentBoxIndex > 0) {
       setCurrentBoxIndex(currentBoxIndex - 1)
     }
-  }
-
-  // Render thùng hàng 3D
-  const renderBox3D = (box: BoxItem | undefined, index: number, position: 'left' | 'right' | 'center') => {
-    if (!box) return null
-
-    const isLeft = position === 'left'
-    const isRight = position === 'right'
-    const isCenter = position === 'center'
-
-    return (
-      <div 
-        className={`absolute inset-0 flex items-center justify-center transition-all duration-700 ease-in-out ${
-          isLeft ? 'transform translate-x-[-150%] opacity-0 pointer-events-none' :
-          isRight ? 'transform translate-x-[150%] opacity-0 pointer-events-none' :
-          'transform translate-x-0 opacity-100'
-        }`}
-        style={{
-          zIndex: isCenter ? 20 : isRight ? 10 : 5
-        }}
-      >
-        <div
-          className="relative transform-gpu transition-all duration-700"
-          style={{
-            transform: `perspective(1000px) rotateY(${isCenter ? '-15deg' : isLeft ? '-30deg' : '15deg'}) rotateX(${isCenter ? '5deg' : '8deg'}) scale(${isCenter ? 1 : 0.75})`,
-          }}
-        >
-          {/* Thùng hàng 3D */}
-          <div className="relative">
-            {/* Shadow */}
-            <div className="absolute inset-0 bg-gray-800/30 rounded-lg blur-xl transform translate-y-4 scale-95" />
-            
-            {/* Thùng hàng chính */}
-            <div className={`relative bg-gradient-to-br from-amber-50 to-amber-100 rounded-lg border-4 border-amber-300 shadow-2xl p-6 w-56 h-56 flex flex-col items-center justify-center ${
-              box.hasLabel ? 'border-green-500' : ''
-            }`}>
-              {/* Icon sản phẩm */}
-              <div className="mb-3">
-                <Package className={`w-12 h-12 ${box.hasLabel ? 'text-green-700' : 'text-amber-700'}`} />
-              </div>
-
-              {/* Nhãn/Tem */}
-              {box.hasLabel && box.labelData && (
-                <div className="absolute top-2 right-2 bg-red-500 text-white px-2 py-1 rounded-md shadow-lg transform rotate-12 animate-pulse border-2 border-white">
-                  <div className="text-[10px] font-bold">TEM</div>
-                </div>
-              )}
-
-              {/* Thông tin trên thùng hàng */}
-              <div className="text-center space-y-1">
-                <div className={`text-[10px] font-semibold ${box.hasLabel ? 'text-green-800' : 'text-amber-800'}`}>
-                  {box.product.name}
-                </div>
-                <div className="text-[9px] text-amber-600">
-                  SKU: {box.product.sku}
-                </div>
-                <div className="text-[9px] text-gray-500">
-                  #{index + 1}
-                </div>
-              </div>
-
-              {/* Hiệu ứng khi đã có nhãn */}
-              {box.hasLabel && (
-                <div className="absolute inset-0 border-4 border-green-500 rounded-lg animate-pulse" />
-              )}
-
-              {/* Nút dán nhãn (chỉ hiển thị khi ở center và chưa có nhãn) */}
-              {isCenter && !box.hasLabel && (
-                <div className="absolute -bottom-12 left-1/2 transform -translate-x-1/2 z-30">
-                  <Button
-                    onClick={() => handleAddLabel(index)}
-                    disabled={isProcessing}
-                    size="sm"
-                    className="bg-blue-600 hover:bg-blue-700 text-white shadow-lg"
-                  >
-                    <Tag className="mr-2 h-3 w-3" />
-                    {isProcessing ? 'Đang xử lý...' : 'Dán nhãn'}
-                  </Button>
-                </div>
-              )}
-
-              {/* Badge đã dán nhãn */}
-              {box.hasLabel && (
-                <div className="absolute -bottom-12 left-1/2 transform -translate-x-1/2 z-30">
-                  <Badge className="bg-green-500 text-white shadow-lg">
-                    <CheckCircle className="mr-1 h-3 w-3" />
-                    Đã dán
-                  </Badge>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      </div>
-    )
   }
 
   return (
