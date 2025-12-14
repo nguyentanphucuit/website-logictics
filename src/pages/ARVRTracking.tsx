@@ -19,7 +19,20 @@ import {
   Box,
   Play,
   Pause,
+  Plus,
+  Youtube,
 } from 'lucide-react'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 
 interface BoxItem {
   id: string
@@ -38,6 +51,7 @@ interface BoxItem {
 
 export default function ARVRTracking() {
   const supplyChain = useDataStore((state) => state.supplyChain)
+  const products = useDataStore((state) => state.products)
   const [selectedOrder, setSelectedOrder] = useState<string | null>(null)
   const [viewMode, setViewMode] = useState<'3d' | 'ar'>('3d')
   const [isFullscreen, setIsFullscreen] = useState(false)
@@ -48,6 +62,17 @@ export default function ARVRTracking() {
   const [isProcessing, setIsProcessing] = useState(false)
   const [isAutoPlay, setIsAutoPlay] = useState(false)
   const [isSliding, setIsSliding] = useState(false)
+  
+  // Dialog thêm sản phẩm
+  const [isAddProductDialogOpen, setIsAddProductDialogOpen] = useState(false)
+  const [addProductForm, setAddProductForm] = useState({
+    productId: '',
+    quantity: '1',
+  })
+  
+  // Dialog YouTube videos
+  const [openVideo1, setOpenVideo1] = useState(false)
+  const [openVideo2, setOpenVideo2] = useState(false)
 
   // Filter orders that are pending or in_transit
   const trackableOrders = supplyChain.filter(
@@ -70,13 +95,22 @@ export default function ARVRTracking() {
             hasLabel: false,
           })
         }
-        setBoxes(newBoxes)
+        // Giữ lại các sản phẩm thêm thủ công (orderId === 'MANUAL')
+        const manualBoxes = boxes.filter((b) => b.orderId === 'MANUAL')
+        setBoxes([...newBoxes, ...manualBoxes])
         setCurrentBoxIndex(0)
       }
     } else {
-      setBoxes([])
+      // Chỉ xóa các box từ đơn hàng, giữ lại sản phẩm thêm thủ công
+      const manualBoxes = boxes.filter((b) => b.orderId === 'MANUAL')
+      if (manualBoxes.length > 0) {
+        setBoxes(manualBoxes)
+      } else {
+        setBoxes([])
+      }
       setCurrentBoxIndex(0)
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedOrder, supplyChain])
 
   // Lấy thùng hàng hiện tại
@@ -162,6 +196,39 @@ export default function ARVRTracking() {
     }
   }
 
+  // Xử lý thêm sản phẩm mới
+  const handleAddProduct = (e: React.FormEvent) => {
+    e.preventDefault()
+    const product = products.find((p) => p.id === addProductForm.productId)
+    if (!product) return
+
+    const quantity = parseInt(addProductForm.quantity) || 1
+    const newBoxes: BoxItem[] = []
+    
+    // Tạo thùng hàng mới
+    for (let i = 0; i < quantity; i++) {
+      newBoxes.push({
+        id: `manual-box-${Date.now()}-${i + 1}`,
+        orderId: 'MANUAL',
+        productId: product.id,
+        product: product,
+        hasLabel: false,
+      })
+    }
+
+    // Thêm vào danh sách boxes
+    setBoxes((prevBoxes) => [...prevBoxes, ...newBoxes])
+    
+    // Nếu chưa có box nào, chuyển đến box đầu tiên
+    if (boxes.length === 0) {
+      setCurrentBoxIndex(0)
+    }
+    
+    // Reset form và đóng dialog
+    setAddProductForm({ productId: '', quantity: '1' })
+    setIsAddProductDialogOpen(false)
+  }
+
   return (
     <div>
       <div className="mb-4 sm:mb-8 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
@@ -173,7 +240,129 @@ export default function ARVRTracking() {
             Quy trình đóng gói và dán nhãn thùng hàng với công nghệ AR/VR
           </p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
+          {/* YouTube Video Dialogs */}
+          <Dialog open={openVideo1} onOpenChange={setOpenVideo1}>
+            <DialogTrigger asChild>
+              <Button
+                variant="outline"
+                size="sm"
+                className="bg-red-50 hover:bg-red-100 text-red-600 border-red-200"
+                title="Xem video hướng dẫn AR/VR"
+              >
+                <Youtube className="mr-2 h-4 w-4" />
+                <span className="hidden sm:inline">Video 1</span>
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-4xl w-full">
+              <DialogHeader>
+                <DialogTitle>Video hướng dẫn AR/VR</DialogTitle>
+              </DialogHeader>
+              <div className="relative w-full" style={{ paddingBottom: '56.25%' }}>
+                <iframe
+                  className="absolute top-0 left-0 w-full h-full rounded-lg"
+                  src="https://www.youtube.com/embed/hXGvS9-GlfM"
+                  title="YouTube video player"
+                  frameBorder="0"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                  allowFullScreen
+                />
+              </div>
+            </DialogContent>
+          </Dialog>
+
+          <Dialog open={openVideo2} onOpenChange={setOpenVideo2}>
+            <DialogTrigger asChild>
+              <Button
+                variant="outline"
+                size="sm"
+                className="bg-red-50 hover:bg-red-100 text-red-600 border-red-200"
+                title="Xem video demo AR/VR"
+              >
+                <Youtube className="mr-2 h-4 w-4" />
+                <span className="hidden sm:inline">Video 2</span>
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-4xl w-full">
+              <DialogHeader>
+                <DialogTitle>Video demo AR/VR</DialogTitle>
+              </DialogHeader>
+              <div className="relative w-full" style={{ paddingBottom: '56.25%' }}>
+                <iframe
+                  className="absolute top-0 left-0 w-full h-full rounded-lg"
+                  src="https://www.youtube.com/embed/kKgt_azwT0M"
+                  title="YouTube video player"
+                  frameBorder="0"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                  allowFullScreen
+                />
+              </div>
+            </DialogContent>
+          </Dialog>
+          <Dialog open={isAddProductDialogOpen} onOpenChange={setIsAddProductDialogOpen}>
+            <DialogTrigger asChild>
+              <Button className="w-full sm:w-auto">
+                <Plus className="mr-2 h-4 w-4" />
+                Thêm sản phẩm
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Thêm sản phẩm vào quy trình đóng gói</DialogTitle>
+                <DialogDescription>
+                  Chọn sản phẩm và số lượng để thêm vào danh sách đóng gói
+                </DialogDescription>
+              </DialogHeader>
+              <form onSubmit={handleAddProduct}>
+                <div className="grid gap-4 py-4">
+                  <div className="grid gap-2">
+                    <Label htmlFor="productId">Sản phẩm *</Label>
+                    <Select
+                      value={addProductForm.productId}
+                      onValueChange={(value) =>
+                        setAddProductForm({ ...addProductForm, productId: value })
+                      }
+                      required
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Chọn sản phẩm" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {products.map((product) => (
+                          <SelectItem key={product.id} value={product.id}>
+                            {product.name} ({product.sku})
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="quantity">Số lượng *</Label>
+                    <Input
+                      id="quantity"
+                      type="number"
+                      min="1"
+                      value={addProductForm.quantity}
+                      onChange={(e) =>
+                        setAddProductForm({ ...addProductForm, quantity: e.target.value })
+                      }
+                      required
+                    />
+                  </div>
+                </div>
+                <DialogFooter>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setIsAddProductDialogOpen(false)}
+                  >
+                    Hủy
+                  </Button>
+                  <Button type="submit">Thêm</Button>
+                </DialogFooter>
+              </form>
+            </DialogContent>
+          </Dialog>
           <Select value={viewMode} onValueChange={(value: any) => setViewMode(value)}>
             <SelectTrigger className="w-full sm:w-auto">
               <SelectValue />
@@ -207,9 +396,9 @@ export default function ARVRTracking() {
                     {viewMode === '3d' ? 'Mô phỏng 3D' : 'Chế độ AR'}
                   </CardTitle>
                   <CardDescription>
-                    {selectedOrderData
-                      ? `Đơn hàng: ${selectedOrderData.orderId} | Thùng ${currentBoxIndex + 1}/${totalBoxes}`
-                      : 'Chọn một đơn hàng để bắt đầu'}
+                    {boxes.length > 0
+                      ? `Thùng ${currentBoxIndex + 1}/${totalBoxes}${selectedOrderData ? ` | Đơn hàng: ${selectedOrderData.orderId}` : ''}`
+                      : 'Chọn một đơn hàng hoặc thêm sản phẩm để bắt đầu'}
                   </CardDescription>
                 </div>
                 {isFullscreen && (
@@ -221,7 +410,7 @@ export default function ARVRTracking() {
             </CardHeader>
             <CardContent>
               <div className="relative w-full h-[500px] sm:h-[600px] bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 rounded-lg overflow-hidden border-2 border-gray-200">
-                {selectedOrderData && currentBox ? (
+                {boxes.length > 0 && currentBox ? (
                   <div className="relative w-full h-full">
                     {/* 3D/AR Visualization - Slider Carousel */}
                     {viewMode === '3d' && (
@@ -624,13 +813,20 @@ export default function ARVRTracking() {
                   <div className="flex items-center justify-center h-full text-gray-500">
                     <div className="text-center">
                       <Package className="w-16 h-16 mx-auto mb-4 opacity-50" />
-                      <p>Chọn một đơn hàng để bắt đầu quy trình đóng gói</p>
+                      <p className="mb-2">Chọn một đơn hàng hoặc thêm sản phẩm để bắt đầu</p>
+                      <Button
+                        onClick={() => setIsAddProductDialogOpen(true)}
+                        className="mt-4"
+                      >
+                        <Plus className="mr-2 h-4 w-4" />
+                        Thêm sản phẩm
+                      </Button>
                     </div>
                   </div>
                 )}
 
                 {/* Progress Bar */}
-                {selectedOrderData && (
+                {boxes.length > 0 && (
                   <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-sm rounded-lg p-3 shadow-lg border border-gray-200">
                     <div className="text-xs text-gray-600 mb-1">Tiến độ đóng gói</div>
                     <div className="w-48 bg-gray-200 rounded-full h-3 mb-1">
@@ -655,83 +851,171 @@ export default function ARVRTracking() {
             <CardHeader>
               <CardTitle>Đơn hàng cần xử lý</CardTitle>
               <CardDescription>
-                {trackableOrders.length} đơn hàng đang chờ đóng gói
+                {trackableOrders.length} đơn hàng + {boxes.filter((b) => b.orderId === 'MANUAL').length > 0 ? new Set(boxes.filter((b) => b.orderId === 'MANUAL').map((b) => b.productId)).size : 0} sản phẩm thêm thủ công
               </CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-2 max-h-[400px] overflow-y-auto">
-                {trackableOrders.length === 0 ? (
+                {trackableOrders.length === 0 && boxes.filter((b) => b.orderId === 'MANUAL').length === 0 ? (
                   <div className="text-center py-8 text-gray-500">
                     <Package className="w-12 h-12 mx-auto mb-2 opacity-50" />
                     <p className="text-sm">Không có đơn hàng cần xử lý</p>
                   </div>
                 ) : (
-                  trackableOrders.map((order) => {
-                    const orderBoxes = boxes.filter((b) => b.orderId === order.id)
-                    const orderProcessed = orderBoxes.filter((b) => b.hasLabel).length
-                    const orderProgress = orderBoxes.length > 0 
-                      ? Math.round((orderProcessed / orderBoxes.length) * 100) 
-                      : 0
+                  <>
+                    {/* Hiển thị đơn hàng từ supply chain */}
+                    {trackableOrders.map((order) => {
+                      const orderBoxes = boxes.filter((b) => b.orderId === order.id)
+                      const orderProcessed = orderBoxes.filter((b) => b.hasLabel).length
+                      const orderProgress = orderBoxes.length > 0 
+                        ? Math.round((orderProcessed / orderBoxes.length) * 100) 
+                        : 0
 
-                    return (
-                      <div
-                        key={order.id}
-                        onClick={() => setSelectedOrder(order.id)}
-                        className={`p-3 border rounded-lg cursor-pointer transition-all ${
-                          selectedOrder === order.id
-                            ? 'border-blue-500 bg-blue-50'
-                            : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
-                        }`}
-                      >
-                        <div className="flex justify-between items-start mb-2">
-                          <div>
-                            <div className="font-semibold text-sm">{order.orderId}</div>
-                            <div className="text-xs text-gray-600">{order.product.name}</div>
+                      return (
+                        <div
+                          key={order.id}
+                          onClick={() => setSelectedOrder(order.id)}
+                          className={`p-3 border rounded-lg cursor-pointer transition-all ${
+                            selectedOrder === order.id
+                              ? 'border-blue-500 bg-blue-50'
+                              : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                          }`}
+                        >
+                          <div className="flex justify-between items-start mb-2">
+                            <div>
+                              <div className="font-semibold text-sm">{order.orderId}</div>
+                              <div className="text-xs text-gray-600">{order.product.name}</div>
+                            </div>
+                            <Badge className="bg-blue-100 text-blue-800">
+                              {order.quantity} thùng
+                            </Badge>
                           </div>
-                          <Badge className="bg-blue-100 text-blue-800">
-                            {order.quantity} thùng
-                          </Badge>
+                          {selectedOrder === order.id && orderBoxes.length > 0 && (
+                            <>
+                              <div className="w-full bg-gray-200 rounded-full h-1.5 mb-1">
+                                <div
+                                  className="bg-blue-600 h-1.5 rounded-full transition-all"
+                                  style={{ width: `${orderProgress}%` }}
+                                />
+                              </div>
+                              <div className="flex justify-between text-xs text-gray-500">
+                                <span>{orderProcessed}/{orderBoxes.length} đã xử lý</span>
+                                <span>{orderProgress}%</span>
+                              </div>
+                            </>
+                          )}
                         </div>
-                        {selectedOrder === order.id && orderBoxes.length > 0 && (
-                          <>
-                            <div className="w-full bg-gray-200 rounded-full h-1.5 mb-1">
-                              <div
-                                className="bg-blue-600 h-1.5 rounded-full transition-all"
-                                style={{ width: `${orderProgress}%` }}
-                              />
+                      )
+                    })}
+
+                    {/* Hiển thị sản phẩm thêm thủ công - nhóm theo productId */}
+                    {(() => {
+                      const manualBoxes = boxes.filter((b) => b.orderId === 'MANUAL')
+                      const groupedManual = manualBoxes.reduce((acc, box) => {
+                        if (!acc[box.productId]) {
+                          acc[box.productId] = []
+                        }
+                        acc[box.productId].push(box)
+                        return acc
+                      }, {} as Record<string, BoxItem[]>)
+
+                      return Object.entries(groupedManual).map(([productId, productBoxes]) => {
+                        const product = productBoxes[0].product
+                        const processed = productBoxes.filter((b) => b.hasLabel).length
+                        const progress = productBoxes.length > 0 
+                          ? Math.round((processed / productBoxes.length) * 100) 
+                          : 0
+                        // Kiểm tra xem sản phẩm này có đang được hiển thị không (currentBox có cùng productId và orderId = MANUAL)
+                        const isSelected = currentBox?.productId === productId && currentBox?.orderId === 'MANUAL'
+
+                        return (
+                          <div
+                            key={`manual-${productId}`}
+                            onClick={() => {
+                              // Tìm index của box đầu tiên của sản phẩm này
+                              const firstIndex = boxes.findIndex((b) => b.productId === productId && b.orderId === 'MANUAL')
+                              if (firstIndex !== -1) {
+                                setCurrentBoxIndex(firstIndex)
+                                // Nếu đang chọn đơn hàng khác, bỏ chọn để hiển thị tất cả
+                                if (selectedOrder) {
+                                  setSelectedOrder(null)
+                                }
+                              }
+                            }}
+                            className={`p-3 border rounded-lg cursor-pointer transition-all ${
+                              isSelected
+                                ? 'border-purple-500 bg-purple-50'
+                                : 'border-purple-200 hover:border-purple-300 hover:bg-purple-50'
+                            }`}
+                          >
+                            <div className="flex justify-between items-start mb-2">
+                              <div>
+                                <div className="font-semibold text-sm flex items-center gap-2">
+                                  {product.name}
+                                  <Badge variant="outline" className="bg-purple-100 text-purple-800 border-purple-300 text-[10px]">
+                                    Thủ công
+                                  </Badge>
+                                </div>
+                                <div className="text-xs text-gray-600">SKU: {product.sku}</div>
+                              </div>
+                              <Badge className="bg-purple-100 text-purple-800">
+                                {productBoxes.length} thùng
+                              </Badge>
                             </div>
-                            <div className="flex justify-between text-xs text-gray-500">
-                              <span>{orderProcessed}/{orderBoxes.length} đã xử lý</span>
-                              <span>{orderProgress}%</span>
-                            </div>
-                          </>
-                        )}
-                      </div>
-                    )
-                  })
+                            {isSelected && productBoxes.length > 0 && (
+                              <>
+                                <div className="w-full bg-gray-200 rounded-full h-1.5 mb-1">
+                                  <div
+                                    className="bg-purple-600 h-1.5 rounded-full transition-all"
+                                    style={{ width: `${progress}%` }}
+                                  />
+                                </div>
+                                <div className="flex justify-between text-xs text-gray-500">
+                                  <span>{processed}/{productBoxes.length} đã xử lý</span>
+                                  <span>{progress}%</span>
+                                </div>
+                              </>
+                            )}
+                          </div>
+                        )
+                      })
+                    })()}
+                  </>
                 )}
               </div>
             </CardContent>
           </Card>
 
           {/* Order Details */}
-          {selectedOrderData && (
+          {boxes.length > 0 && (
             <Card>
               <CardHeader>
-                <CardTitle>Chi tiết đơn hàng</CardTitle>
+                <CardTitle>Chi tiết đóng gói</CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
+                {selectedOrderData && (
+                  <>
+                    <div>
+                      <div className="text-xs text-gray-500">Mã đơn hàng</div>
+                      <div className="font-semibold">{selectedOrderData.orderId}</div>
+                    </div>
+                    <div>
+                      <div className="text-xs text-gray-500">Sản phẩm</div>
+                      <div className="font-semibold">{selectedOrderData.product.name}</div>
+                      <div className="text-xs text-gray-600">SKU: {selectedOrderData.product.sku}</div>
+                    </div>
+                  </>
+                )}
+                {boxes.some((b) => b.orderId === 'MANUAL') && (
+                  <div>
+                    <div className="text-xs text-gray-500">Sản phẩm thêm thủ công</div>
+                    <div className="text-xs text-gray-600">
+                      {boxes.filter((b) => b.orderId === 'MANUAL').length} thùng
+                    </div>
+                  </div>
+                )}
                 <div>
-                  <div className="text-xs text-gray-500">Mã đơn hàng</div>
-                  <div className="font-semibold">{selectedOrderData.orderId}</div>
-                </div>
-                <div>
-                  <div className="text-xs text-gray-500">Sản phẩm</div>
-                  <div className="font-semibold">{selectedOrderData.product.name}</div>
-                  <div className="text-xs text-gray-600">SKU: {selectedOrderData.product.sku}</div>
-                </div>
-                <div>
-                  <div className="text-xs text-gray-500">Số lượng thùng</div>
+                  <div className="text-xs text-gray-500">Tổng số thùng</div>
                   <div className="font-semibold">{totalBoxes} thùng</div>
                 </div>
                 <div>
