@@ -71,8 +71,14 @@ export default function ARVRTracking() {
   })
   
   // Dialog YouTube videos
-  const [openVideo1, setOpenVideo1] = useState(false)
-  const [openVideo2, setOpenVideo2] = useState(false)
+  const youtubeVideos = [
+    { id: 'hXGvS9-GlfM', label: 'Video 1', title: 'Video hướng dẫn AR/VR' },
+    { id: 'kKgt_azwT0M', label: 'Video 2', title: 'Video demo AR/VR' },
+    { id: 'GjA95i6fLI4', label: 'Video 3', title: 'Video AR/VR Logistics #3' },
+    { id: 'Woxy7uz_KVI', label: 'Video 4', title: 'Video AR/VR Logistics #4' },
+    { id: 'T4RfuUDmzQI', label: 'Video 5', title: 'Video AR/VR Logistics #5' },
+  ]
+  const [openVideoId, setOpenVideoId] = useState<string | null>(null)
 
   // Filter orders that are pending or in_transit
   const trackableOrders = supplyChain.filter(
@@ -242,63 +248,40 @@ export default function ARVRTracking() {
         </div>
         <div className="flex flex-wrap gap-2">
           {/* YouTube Video Dialogs */}
-          <Dialog open={openVideo1} onOpenChange={setOpenVideo1}>
-            <DialogTrigger asChild>
-              <Button
-                variant="outline"
-                size="sm"
-                className="bg-red-50 hover:bg-red-100 text-red-600 border-red-200"
-                title="Xem video hướng dẫn AR/VR"
-              >
-                <Youtube className="mr-2 h-4 w-4" />
-                <span className="hidden sm:inline">Video 1</span>
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-4xl w-full">
-              <DialogHeader>
-                <DialogTitle>Video hướng dẫn AR/VR</DialogTitle>
-              </DialogHeader>
-              <div className="relative w-full" style={{ paddingBottom: '56.25%' }}>
-                <iframe
-                  className="absolute top-0 left-0 w-full h-full rounded-lg"
-                  src="https://www.youtube.com/embed/hXGvS9-GlfM"
-                  title="YouTube video player"
-                  frameBorder="0"
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                  allowFullScreen
-                />
-              </div>
-            </DialogContent>
-          </Dialog>
-
-          <Dialog open={openVideo2} onOpenChange={setOpenVideo2}>
-            <DialogTrigger asChild>
-              <Button
-                variant="outline"
-                size="sm"
-                className="bg-red-50 hover:bg-red-100 text-red-600 border-red-200"
-                title="Xem video demo AR/VR"
-              >
-                <Youtube className="mr-2 h-4 w-4" />
-                <span className="hidden sm:inline">Video 2</span>
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-4xl w-full">
-              <DialogHeader>
-                <DialogTitle>Video demo AR/VR</DialogTitle>
-              </DialogHeader>
-              <div className="relative w-full" style={{ paddingBottom: '56.25%' }}>
-                <iframe
-                  className="absolute top-0 left-0 w-full h-full rounded-lg"
-                  src="https://www.youtube.com/embed/kKgt_azwT0M"
-                  title="YouTube video player"
-                  frameBorder="0"
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                  allowFullScreen
-                />
-              </div>
-            </DialogContent>
-          </Dialog>
+          {youtubeVideos.map((video) => (
+            <Dialog
+              key={video.id}
+              open={openVideoId === video.id}
+              onOpenChange={(open) => setOpenVideoId(open ? video.id : null)}
+            >
+              <DialogTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="bg-red-50 hover:bg-red-100 text-red-600 border-red-200"
+                  title={video.title}
+                >
+                  <Youtube className="mr-2 h-4 w-4" />
+                  <span className="hidden sm:inline">{video.label}</span>
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-4xl w-full">
+                <DialogHeader>
+                  <DialogTitle>{video.title}</DialogTitle>
+                </DialogHeader>
+                <div className="relative w-full" style={{ paddingBottom: '56.25%' }}>
+                  <iframe
+                    className="absolute top-0 left-0 w-full h-full rounded-lg"
+                    src={`https://www.youtube.com/embed/${video.id}`}
+                    title="YouTube video player"
+                    frameBorder="0"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                    allowFullScreen
+                  />
+                </div>
+              </DialogContent>
+            </Dialog>
+          ))}
           <Dialog open={isAddProductDialogOpen} onOpenChange={setIsAddProductDialogOpen}>
             <DialogTrigger asChild>
               <Button className="w-full sm:w-auto">

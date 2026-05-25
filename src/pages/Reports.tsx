@@ -13,6 +13,116 @@ import {
   TableRow,
 } from '@/components/ui/table'
 
+type Slice = { label: string; value: number; color: string }
+
+/** Biểu đồ tròn (donut) bằng SVG thuần */
+function DonutChart({ data, size = 200, title }: { data: Slice[]; size?: number; title?: string }) {
+  const total = data.reduce((s, d) => s + d.value, 0)
+  const cx = size / 2
+  const cy = size / 2
+  const r = size / 2 - 20
+  const stroke = 28
+
+  // Trường hợp tổng = 0: vẽ vòng tròn xám
+  if (total === 0) {
+    return (
+      <div className="flex flex-col items-center">
+        <svg width={size} height={size}>
+          <circle cx={cx} cy={cy} r={r} fill="none" stroke="#e5e7eb" strokeWidth={stroke} />
+          <text x={cx} y={cy} textAnchor="middle" dominantBaseline="central" className="text-sm fill-gray-400">
+            Không có dữ liệu
+          </text>
+        </svg>
+        {title && <div className="mt-2 text-sm font-medium text-gray-700">{title}</div>}
+      </div>
+    )
+  }
+
+  // Vẽ từng cung tròn dưới dạng path
+  let cumulative = 0
+  const polar = (angleDeg: number) => {
+    const rad = ((angleDeg - 90) * Math.PI) / 180
+    return { x: cx + r * Math.cos(rad), y: cy + r * Math.sin(rad) }
+  }
+  const arcs = data
+    .filter((d) => d.value > 0)
+    .map((d, i) => {
+      const startAngle = (cumulative / total) * 360
+      cumulative += d.value
+      const endAngle = (cumulative / total) * 360
+      const largeArc = endAngle - startAngle > 180 ? 1 : 0
+      const start = polar(startAngle)
+      const end = polar(endAngle)
+      // Trường hợp 1 slice chiếm 100%: vẽ thành 2 nửa
+      const isFull = endAngle - startAngle >= 359.99
+      const path = isFull
+        ? `M ${cx - r} ${cy} A ${r} ${r} 0 1 1 ${cx + r} ${cy} A ${r} ${r} 0 1 1 ${cx - r} ${cy}`
+        : `M ${start.x} ${start.y} A ${r} ${r} 0 ${largeArc} 1 ${end.x} ${end.y}`
+      return <path key={i} d={path} fill="none" stroke={d.color} strokeWidth={stroke} />
+    })
+
+  return (
+    <div className="flex flex-col items-center">
+      <svg width={size} height={size}>
+        {arcs}
+        <text x={cx} y={cy - 6} textAnchor="middle" className="text-2xl font-bold fill-gray-900">
+          {total}
+        </text>
+        <text x={cx} y={cy + 14} textAnchor="middle" className="text-[10px] fill-gray-500 uppercase tracking-wider">
+          Tổng
+        </text>
+      </svg>
+      {title && <div className="mt-1 text-sm font-medium text-gray-700">{title}</div>}
+      {/* Chú thích */}
+      <div className="mt-3 grid grid-cols-2 gap-x-3 gap-y-1 w-full px-2">
+        {data.map((d, i) => (
+          <div key={i} className="flex items-center gap-1.5 text-xs">
+            <span className="w-3 h-3 rounded-sm shrink-0" style={{ backgroundColor: d.color }} />
+            <span className="text-gray-600 truncate">{d.label}</span>
+            <span className="ml-auto font-semibold text-gray-900">{d.value}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+/** Biểu đồ cột ngang */
+function BarChart({ data, unit = '' }: { data: Slice[]; unit?: string }) {
+  const max = Math.max(...data.map((d) => d.value), 1)
+  return (
+    <div className="space-y-3">
+      {data.length === 0 ? (
+        <p className="text-sm text-gray-500 text-center py-6">Không có dữ liệu</p>
+      ) : (
+        data.map((d, i) => {
+          const pct = (d.value / max) * 100
+          return (
+            <div key={i}>
+              <div className="flex justify-between text-xs mb-1">
+                <span className="font-medium text-gray-700 truncate pr-2">{d.label}</span>
+                <span className="text-gray-600 shrink-0">
+                  {d.value}{unit ? ` ${unit}` : ''}
+                </span>
+              </div>
+              <div className="h-6 bg-gray-100 rounded overflow-hidden">
+                <div
+                  className="h-full rounded transition-all duration-500 flex items-center justify-end px-2"
+                  style={{ width: `${pct}%`, backgroundColor: d.color, minWidth: d.value > 0 ? '24px' : '0' }}
+                >
+                  {pct > 15 && (
+                    <span className="text-[10px] font-semibold text-white">{Math.round(pct)}%</span>
+                  )}
+                </div>
+              </div>
+            </div>
+          )
+        })
+      )}
+    </div>
+  )
+}
+
 export default function Reports() {
   const stats = useDataStore((state) => state.getDashboardStats())
   const reports = useDataStore((state) => state.getWarehouseReports())
@@ -29,6 +139,38 @@ export default function Reports() {
   const handleExportSupplyChain = () => {
     exportSupplyChain(supplyChain)
   }
+
+  // === Data cho biểu đồ ===
+  const warehouseStatusData: Slice[] = [
+    { label: 'Còn hàng', value: reports.filter((r) => r.status === 'in_stock').length, color: '#22c55e' },
+    { label: 'Sắp hết', value: reports.filter((r) => r.status === 'low_stock').length, color: '#f97316' },
+    { label: 'Hết hàng', value: reports.filter((r) => r.status === 'out_of_stock').length, color: '#ef4444' },
+    { label: 'Tồn kho cao', value: reports.filter((r) => r.status === 'overstock').length, color: '#6b7280' },
+  ]
+
+  const orderStatusData: Slice[] = [
+    { label: 'Chờ xử lý', value: stats.pendingOrders, color: '#eab308' },
+    { label: 'Đang vận chuyển', value: stats.inTransitOrders, color: '#3b82f6' },
+    { label: 'Đã giao', value: stats.deliveredOrders, color: '#22c55e' },
+    { label: 'Đã hủy', value: supplyChain.filter((s) => s.status === 'cancelled').length, color: '#ef4444' },
+  ]
+
+  const stockBarData: Slice[] = reports.map((r, i) => ({
+    label: r.product.name,
+    value: r.currentStock,
+    color: ['#3b82f6', '#8b5cf6', '#ec4899', '#f59e0b', '#10b981', '#06b6d4'][i % 6],
+  }))
+
+  // Phân loại theo danh mục
+  const categoryMap = reports.reduce((acc, r) => {
+    acc[r.product.category] = (acc[r.product.category] || 0) + r.currentStock
+    return acc
+  }, {} as Record<string, number>)
+  const categoryData: Slice[] = Object.entries(categoryMap).map(([cat, value], i) => ({
+    label: cat,
+    value,
+    color: ['#3b82f6', '#8b5cf6', '#ec4899', '#f59e0b', '#10b981'][i % 5],
+  }))
 
   return (
     <div>
@@ -54,6 +196,50 @@ export default function Reports() {
         </TabsList>
 
         <TabsContent value="overview" className="space-y-4">
+          {/* === HÀNG BIỂU ĐỒ === */}
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base">Phân bố tồn kho</CardTitle>
+                <CardDescription>Theo trạng thái kho</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <DonutChart data={warehouseStatusData} />
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base">Trạng thái đơn hàng</CardTitle>
+                <CardDescription>Phân loại chuỗi cung ứng</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <DonutChart data={orderStatusData} />
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base">Tồn kho theo danh mục</CardTitle>
+                <CardDescription>Tổng số lượng theo nhóm</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <DonutChart data={categoryData} />
+              </CardContent>
+            </Card>
+          </div>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">Tồn kho từng sản phẩm</CardTitle>
+              <CardDescription>So sánh số lượng hiện tại</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <BarChart data={stockBarData} />
+            </CardContent>
+          </Card>
+
+          {/* === HÀNG SỐ LIỆU === */}
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             <Card>
               <CardHeader>
@@ -190,6 +376,25 @@ export default function Reports() {
         </TabsContent>
 
         <TabsContent value="warehouse" className="space-y-4">
+          <div className="grid gap-4 md:grid-cols-2">
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base">Phân bố trạng thái</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <DonutChart data={warehouseStatusData} />
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base">Tồn kho từng sản phẩm</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <BarChart data={stockBarData} />
+              </CardContent>
+            </Card>
+          </div>
+
           <Card>
             <CardHeader>
               <CardTitle>Chi tiết báo cáo kho</CardTitle>
@@ -249,6 +454,17 @@ export default function Reports() {
         </TabsContent>
 
         <TabsContent value="supplychain" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">Trạng thái đơn hàng</CardTitle>
+            </CardHeader>
+            <CardContent className="flex justify-center">
+              <div className="max-w-xs w-full">
+                <DonutChart data={orderStatusData} />
+              </div>
+            </CardContent>
+          </Card>
+
           <Card>
             <CardHeader>
               <CardTitle>Chi tiết chuỗi cung ứng</CardTitle>
@@ -312,5 +528,3 @@ export default function Reports() {
     </div>
   )
 }
-
-
