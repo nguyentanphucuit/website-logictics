@@ -9,6 +9,9 @@ export interface Product {
   updatedAt: string
 }
 
+export type InventoryCondition = 'new' | 'good' | 'damaged' | 'expired'
+export type AuditCheck = 'sufficient' | 'missing' | 'excess'
+
 export interface InventoryItem {
   id: string
   productId: string
@@ -18,6 +21,12 @@ export interface InventoryItem {
   minStock: number
   maxStock: number
   lastUpdated: string
+  condition: InventoryCondition
+  expiryDate?: string
+  supplier: string
+  reorderQuantity: number
+  auditCheck?: AuditCheck
+  barcode: string
 }
 
 export interface SupplyChainStatus {
@@ -62,6 +71,12 @@ export interface WarehouseReport {
   status: 'in_stock' | 'low_stock' | 'out_of_stock' | 'overstock'
   location: string
   lastMovement: string
+  condition: InventoryCondition
+  expiryDate?: string
+  supplier: string
+  reorderQuantity: number
+  auditCheck?: AuditCheck
+  barcode: string
 }
 
 export interface DashboardStats {
@@ -199,6 +214,7 @@ export interface ProductPrediction {
 }
 
 export interface FutureProductPrediction {
+  id?: string
   category: string
   predictedProducts: string[]
   confidence: number

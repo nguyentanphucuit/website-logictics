@@ -217,7 +217,7 @@ export default function Layout({ children }: LayoutProps) {
       {/* Main Content */}
       <div className="flex-1 flex flex-col min-w-0">
         {/* Header */}
-        <header className="bg-white border-b border-gray-200 h-16 flex items-center px-4 sm:px-6 lg:px-8">
+        <header className="bg-white border-b border-gray-200 h-16 flex items-center justify-between px-4 sm:px-6 lg:px-8">
           <Button
             variant="ghost"
             size="icon"
@@ -226,6 +226,9 @@ export default function Layout({ children }: LayoutProps) {
           >
             <Menu className="h-6 w-6" />
           </Button>
+          <div className="flex-1 text-center text-xs sm:text-sm font-medium text-gray-700">
+            © {new Date().getFullYear()} Bản quyền web Nguyễn Minh Hảo
+          </div>
         </header>
 
         {/* Page Content */}
@@ -234,6 +237,11 @@ export default function Layout({ children }: LayoutProps) {
             {children}
           </div>
         </main>
+
+        {/* Footer */}
+        <footer className="bg-white border-t border-gray-200 py-4 px-4 sm:px-6 lg:px-8 text-center text-xs sm:text-sm text-gray-500">
+          © {new Date().getFullYear()} Bản quyền web Nguyễn Minh Hảo
+        </footer>
       </div>
     </div>
   )

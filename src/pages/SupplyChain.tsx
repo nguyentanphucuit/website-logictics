@@ -59,6 +59,13 @@ export default function SupplyChain() {
     cancelled: supplyChain.filter(s => s.status === 'cancelled').length,
   }
 
+  const statusTriggerColor: Record<string, string> = {
+    pending: 'bg-yellow-100 text-yellow-800 border-yellow-300 font-medium',
+    in_transit: 'bg-blue-100 text-blue-800 border-blue-300 font-medium',
+    delivered: 'bg-green-100 text-green-800 border-green-300 font-medium',
+    cancelled: 'bg-red-100 text-red-800 border-red-300 font-medium',
+  }
+
   return (
     <div>
       <div className="mb-4 sm:mb-8 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
@@ -148,14 +155,14 @@ export default function SupplyChain() {
                           value={item.status}
                           onValueChange={(value) => handleStatusChange(item.id, value)}
                         >
-                          <SelectTrigger className="w-full sm:w-[150px]">
+                          <SelectTrigger className={`w-full sm:w-[150px] ${statusTriggerColor[item.status] ?? ''}`}>
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="pending">Chờ xử lý</SelectItem>
-                            <SelectItem value="in_transit">Đang vận chuyển</SelectItem>
-                            <SelectItem value="delivered">Đã giao</SelectItem>
-                            <SelectItem value="cancelled">Đã hủy</SelectItem>
+                            <SelectItem value="pending" className="text-yellow-700 font-medium">Chờ xử lý</SelectItem>
+                            <SelectItem value="in_transit" className="text-blue-700 font-medium">Đang vận chuyển</SelectItem>
+                            <SelectItem value="delivered" className="text-green-700 font-medium">Đã giao</SelectItem>
+                            <SelectItem value="cancelled" className="text-red-700 font-medium">Đã hủy</SelectItem>
                           </SelectContent>
                         </Select>
                       </TableCell>

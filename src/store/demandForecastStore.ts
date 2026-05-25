@@ -12,31 +12,36 @@ import { useDataStore } from './dataStore'
 interface DemandForecastStore {
   customers: Customer[]
   orders: Order[]
-  
+  productPredictions: FutureProductPrediction[]
+
   // Actions
   addCustomer: (customer: Omit<Customer, 'id' | 'createdAt' | 'updatedAt' | 'segment' | 'totalOrders' | 'totalSpent' | 'averageOrderValue' | 'firstPurchaseDate' | 'lastPurchaseDate'>) => Customer
   updateCustomer: (id: string, customer: Partial<Customer>) => void
   deleteCustomer: (id: string) => void
-  
+
   addOrder: (order: Omit<Order, 'id'>) => Order
   updateOrder: (id: string, order: Partial<Order>) => void
   deleteOrder: (id: string) => void
-  
+
   // Prediction functions
   classifyCustomer: (customerId: string) => CustomerSegment
   predictFutureProducts: (customerId: string) => ProductPrediction[]
   predictFutureServices: (customerId: string) => string[]
   getDemandForecast: (customerId: string) => DemandForecast | null
   getAllDemandForecasts: () => DemandForecast[]
-  
+
   // Customer segmentation
   getPotentialCustomers: () => Customer[]
   getShortTermCustomers: () => Customer[]
   getLongTermCustomers: () => Customer[]
-  
+
   // Future product predictions
   predictNewProductTypes: () => FutureProductPrediction[]
-  
+  regenerateProductPredictions: () => void
+  addProductPrediction: (prediction: Omit<FutureProductPrediction, 'id'>) => void
+  updateProductPrediction: (id: string, prediction: Partial<FutureProductPrediction>) => void
+  deleteProductPrediction: (id: string) => void
+
   // Auto-trigger prediction when order is created
   onOrderCreated: (order: Order) => void
 }
@@ -164,6 +169,7 @@ const initialOrders: Order[] = [
 export const useDemandForecastStore = create<DemandForecastStore>((set, get) => ({
   customers: initialCustomers,
   orders: initialOrders,
+  productPredictions: [],
   
   addCustomer: (customerData) => {
     const newCustomer: Customer = {
@@ -559,7 +565,41 @@ export const useDemandForecastStore = create<DemandForecastStore>((set, get) => 
     
     return predictions
   },
-  
+
+  regenerateProductPredictions: () => {
+    const generated = get().predictNewProductTypes()
+    const base = Date.now()
+    set({
+      productPredictions: generated.map((p, i) => ({
+        ...p,
+        id: `${base}-${i}`,
+      })),
+    })
+  },
+
+  addProductPrediction: (prediction) => {
+    set((state) => ({
+      productPredictions: [
+        ...state.productPredictions,
+        { ...prediction, id: Date.now().toString() },
+      ],
+    }))
+  },
+
+  updateProductPrediction: (id, prediction) => {
+    set((state) => ({
+      productPredictions: state.productPredictions.map((p) =>
+        p.id === id ? { ...p, ...prediction } : p
+      ),
+    }))
+  },
+
+  deleteProductPrediction: (id) => {
+    set((state) => ({
+      productPredictions: state.productPredictions.filter((p) => p.id !== id),
+    }))
+  },
+
   onOrderCreated: (order) => {
     const customer = get().customers.find((c) => c.id === order.customerId)
     if (!customer) return

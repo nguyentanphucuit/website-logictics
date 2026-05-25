@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useDemandForecastStore } from '@/store/demandForecastStore'
 import { useDataStore } from '@/store/dataStore'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -40,7 +40,11 @@ import {
   Clock,
   Star,
   Sparkles,
+  Edit,
+  Trash2,
+  RefreshCw,
 } from 'lucide-react'
+import { FutureProductPrediction } from '@/types'
 import { format } from 'date-fns'
 
 export default function DemandForecast() {
@@ -52,7 +56,11 @@ export default function DemandForecast() {
   const getPotentialCustomers = useDemandForecastStore((state) => state.getPotentialCustomers)
   const getShortTermCustomers = useDemandForecastStore((state) => state.getShortTermCustomers)
   const getLongTermCustomers = useDemandForecastStore((state) => state.getLongTermCustomers)
-  const predictNewProductTypes = useDemandForecastStore((state) => state.predictNewProductTypes)
+  const productPredictions = useDemandForecastStore((state) => state.productPredictions)
+  const regenerateProductPredictions = useDemandForecastStore((state) => state.regenerateProductPredictions)
+  const addProductPrediction = useDemandForecastStore((state) => state.addProductPrediction)
+  const updateProductPrediction = useDemandForecastStore((state) => state.updateProductPrediction)
+  const deleteProductPrediction = useDemandForecastStore((state) => state.deleteProductPrediction)
 
   const [isCustomerDialogOpen, setIsCustomerDialogOpen] = useState(false)
   const [isOrderDialogOpen, setIsOrderDialogOpen] = useState(false)
@@ -75,7 +83,70 @@ export default function DemandForecast() {
   const potentialCustomers = getPotentialCustomers()
   const shortTermCustomers = getShortTermCustomers()
   const longTermCustomers = getLongTermCustomers()
-  const newProductPredictions = predictNewProductTypes()
+
+  useEffect(() => {
+    if (productPredictions.length === 0) {
+      regenerateProductPredictions()
+    }
+  }, [])
+
+  const [predictionDialogOpen, setPredictionDialogOpen] = useState(false)
+  const [editingPredictionId, setEditingPredictionId] = useState<string | null>(null)
+  const emptyPredictionForm = {
+    category: '',
+    predictedProducts: '',
+    confidence: 75,
+    timeframe: 'medium_term' as FutureProductPrediction['timeframe'],
+    reasoning: '',
+  }
+  const [predictionForm, setPredictionForm] = useState(emptyPredictionForm)
+
+  const openAddPrediction = () => {
+    setEditingPredictionId(null)
+    setPredictionForm(emptyPredictionForm)
+    setPredictionDialogOpen(true)
+  }
+
+  const openEditPrediction = (p: FutureProductPrediction) => {
+    if (!p.id) return
+    setEditingPredictionId(p.id)
+    setPredictionForm({
+      category: p.category,
+      predictedProducts: p.predictedProducts.join(', '),
+      confidence: Math.round(p.confidence * 100),
+      timeframe: p.timeframe,
+      reasoning: p.reasoning ?? '',
+    })
+    setPredictionDialogOpen(true)
+  }
+
+  const handleSavePrediction = (e: React.FormEvent) => {
+    e.preventDefault()
+    const payload = {
+      category: predictionForm.category.trim(),
+      predictedProducts: predictionForm.predictedProducts
+        .split(',')
+        .map((s) => s.trim())
+        .filter(Boolean),
+      confidence: Math.max(0, Math.min(100, Number(predictionForm.confidence))) / 100,
+      timeframe: predictionForm.timeframe,
+      reasoning: predictionForm.reasoning.trim() || undefined,
+    }
+    if (!payload.category) return
+    if (editingPredictionId) {
+      updateProductPrediction(editingPredictionId, payload)
+    } else {
+      addProductPrediction(payload)
+    }
+    setPredictionDialogOpen(false)
+  }
+
+  const handleDeletePrediction = (id?: string) => {
+    if (!id) return
+    if (confirm('Bạn có chắc muốn xóa dự đoán này?')) {
+      deleteProductPrediction(id)
+    }
+  }
 
   const handleAddCustomer = (e: React.FormEvent) => {
     e.preventDefault()
@@ -429,66 +500,74 @@ export default function DemandForecast() {
                       <TableHead className="hidden lg:table-cell">Dịch vụ dự đoán</TableHead>
                       <TableHead className="text-right">Độ tin cậy</TableHead>
                       <TableHead className="text-right">Xác suất mua lại</TableHead>
+                      <TableHead className="text-right">Giá trị dự kiến</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {forecasts.length === 0 ? (
                       <TableRow>
-                        <TableCell colSpan={6} className="text-center text-gray-500">
+                        <TableCell colSpan={7} className="text-center text-gray-500">
                           Chưa có dữ liệu dự báo. Hãy thêm khách hàng và đơn hàng để hệ thống tự động dự đoán.
                         </TableCell>
                       </TableRow>
                     ) : (
-                      forecasts.map((forecast) => (
-                        <TableRow key={forecast.customerId}>
-                          <TableCell>
-                            <div>
-                              <div className="font-medium">{forecast.customer?.name}</div>
-                              <div className="text-xs text-gray-500">{forecast.customer?.email}</div>
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            <div className="flex flex-col gap-1">
-                              {getSegmentBadge(forecast.customer?.segment || 'new')}
-                              {getCustomerTypeBadge(forecast.customer?.customerType || 'regular')}
-                            </div>
-                          </TableCell>
-                          <TableCell className="hidden md:table-cell">
-                            <div className="flex flex-wrap gap-1">
-                              {forecast.predictedProducts.slice(0, 3).map((pred) => (
-                                <Badge key={pred.productId} variant="outline">
-                                  {pred.product?.name || pred.productId}
-                                </Badge>
-                              ))}
-                              {forecast.predictedProducts.length > 3 && (
-                                <Badge variant="outline">
-                                  +{forecast.predictedProducts.length - 3}
-                                </Badge>
-                              )}
-                            </div>
-                          </TableCell>
-                          <TableCell className="hidden lg:table-cell">
-                            <div className="flex flex-wrap gap-1">
-                              {forecast.predictedServices.slice(0, 2).map((service, idx) => (
-                                <Badge key={idx} variant="outline" className="bg-blue-50">
-                                  {service}
-                                </Badge>
-                              ))}
-                              {forecast.predictedServices.length > 2 && (
-                                <Badge variant="outline">
-                                  +{forecast.predictedServices.length - 2}
-                                </Badge>
-                              )}
-                            </div>
-                          </TableCell>
-                          <TableCell className="text-right">
-                            {Math.round(forecast.confidenceScore * 100)}%
-                          </TableCell>
-                          <TableCell className="text-right">
-                            {Math.round(forecast.nextPurchaseProbability * 100)}%
-                          </TableCell>
-                        </TableRow>
-                      ))
+                      forecasts.map((forecast) => {
+                        const avgOrder = forecast.customer?.averageOrderValue ?? 0
+                        const expectedValue = avgOrder * forecast.nextPurchaseProbability
+                        return (
+                          <TableRow key={forecast.customerId}>
+                            <TableCell>
+                              <div>
+                                <div className="font-medium">{forecast.customer?.name}</div>
+                                <div className="text-xs text-gray-500">{forecast.customer?.email}</div>
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              <div className="flex flex-col gap-1">
+                                {getSegmentBadge(forecast.customer?.segment || 'new')}
+                                {getCustomerTypeBadge(forecast.customer?.customerType || 'regular')}
+                              </div>
+                            </TableCell>
+                            <TableCell className="hidden md:table-cell">
+                              <div className="flex flex-wrap gap-1">
+                                {forecast.predictedProducts.slice(0, 3).map((pred) => (
+                                  <Badge key={pred.productId} variant="outline">
+                                    {pred.product?.name || pred.productId}
+                                  </Badge>
+                                ))}
+                                {forecast.predictedProducts.length > 3 && (
+                                  <Badge variant="outline">
+                                    +{forecast.predictedProducts.length - 3}
+                                  </Badge>
+                                )}
+                              </div>
+                            </TableCell>
+                            <TableCell className="hidden lg:table-cell">
+                              <div className="flex flex-wrap gap-1">
+                                {forecast.predictedServices.slice(0, 2).map((service, idx) => (
+                                  <Badge key={idx} variant="outline" className="bg-blue-50">
+                                    {service}
+                                  </Badge>
+                                ))}
+                                {forecast.predictedServices.length > 2 && (
+                                  <Badge variant="outline">
+                                    +{forecast.predictedServices.length - 2}
+                                  </Badge>
+                                )}
+                              </div>
+                            </TableCell>
+                            <TableCell className="text-right">
+                              {Math.round(forecast.confidenceScore * 100)}%
+                            </TableCell>
+                            <TableCell className="text-right">
+                              {Math.round(forecast.nextPurchaseProbability * 100)}%
+                            </TableCell>
+                            <TableCell className="text-right font-medium text-green-700">
+                              {formatCurrency(expectedValue)}
+                            </TableCell>
+                          </TableRow>
+                        )
+                      })
                     )}
                   </TableBody>
                 </Table>
@@ -652,62 +731,95 @@ export default function DemandForecast() {
         <TabsContent value="products" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Sparkles className="h-5 w-5" />
-                Dự đoán loại sản phẩm mới
-              </CardTitle>
-              <CardDescription>
-                Hệ thống phân tích xu hướng và dự đoán các loại sản phẩm/dịch vụ mới trong tương lai
-              </CardDescription>
+              <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3">
+                <div>
+                  <CardTitle className="flex items-center gap-2">
+                    <Sparkles className="h-5 w-5" />
+                    Dự đoán loại sản phẩm mới
+                  </CardTitle>
+                  <CardDescription className="mt-1">
+                    Hệ thống phân tích xu hướng và dự đoán các loại sản phẩm/dịch vụ mới — có thể sửa/xóa/thêm
+                  </CardDescription>
+                </div>
+                <div className="flex gap-2">
+                  <Button variant="outline" size="sm" onClick={regenerateProductPredictions}>
+                    <RefreshCw className="mr-2 h-4 w-4" />
+                    Tạo lại dự đoán
+                  </Button>
+                  <Button size="sm" onClick={openAddPrediction}>
+                    <Plus className="mr-2 h-4 w-4" />
+                    Thêm dự đoán
+                  </Button>
+                </div>
+              </div>
             </CardHeader>
             <CardContent>
-              {newProductPredictions.length === 0 ? (
+              {productPredictions.length === 0 ? (
                 <p className="text-center text-gray-500 py-8">
-                  Chưa có dữ liệu đủ để dự đoán. Hãy thêm nhiều đơn hàng hơn.
+                  Chưa có dự đoán nào. Bấm "Tạo lại dự đoán" để hệ thống tự sinh hoặc "Thêm dự đoán" để tự nhập.
                 </p>
               ) : (
                 <div className="space-y-4">
-                  {newProductPredictions.map((prediction, idx) => (
-                    <Card key={idx} className="border-l-4 border-l-blue-500">
-                      <CardHeader>
-                        <div className="flex justify-between items-start">
-                          <div>
-                            <CardTitle className="text-lg">{prediction.category}</CardTitle>
-                            <CardDescription className="mt-1">{prediction.reasoning}</CardDescription>
-                          </div>
-                          <div className="flex flex-col items-end gap-2">
-                            <Badge
-                              className={
-                                prediction.timeframe === 'short_term'
-                                  ? 'bg-green-100 text-green-800'
+                  {productPredictions.map((prediction) => (
+                    <Card key={prediction.id} className="border-l-4 border-l-blue-500">
+                      <CardHeader className="pb-3">
+                        <div className="flex justify-between items-start gap-3">
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <CardTitle className="text-lg">{prediction.category}</CardTitle>
+                              <Badge
+                                className={
+                                  prediction.timeframe === 'short_term'
+                                    ? 'bg-green-100 text-green-800 hover:bg-green-100'
+                                    : prediction.timeframe === 'medium_term'
+                                    ? 'bg-yellow-100 text-yellow-800 hover:bg-yellow-100'
+                                    : 'bg-blue-100 text-blue-800 hover:bg-blue-100'
+                                }
+                              >
+                                {prediction.timeframe === 'short_term'
+                                  ? 'Ngắn hạn'
                                   : prediction.timeframe === 'medium_term'
-                                  ? 'bg-yellow-100 text-yellow-800'
-                                  : 'bg-blue-100 text-blue-800'
-                              }
-                            >
-                              {prediction.timeframe === 'short_term'
-                                ? 'Ngắn hạn'
-                                : prediction.timeframe === 'medium_term'
-                                ? 'Trung hạn'
-                                : 'Dài hạn'}
-                            </Badge>
-                            <div className="text-sm text-gray-600">
-                              Độ tin cậy: {Math.round(prediction.confidence * 100)}%
+                                  ? 'Trung hạn'
+                                  : 'Dài hạn'}
+                              </Badge>
+                              <span className="text-xs text-gray-500">
+                                Độ tin cậy: <span className="font-medium text-gray-700">{Math.round(prediction.confidence * 100)}%</span>
+                              </span>
                             </div>
+                            {prediction.reasoning && (
+                              <CardDescription className="mt-1.5">{prediction.reasoning}</CardDescription>
+                            )}
+                          </div>
+                          <div className="flex gap-1 shrink-0">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8"
+                              title="Sửa"
+                              onClick={() => openEditPrediction(prediction)}
+                            >
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8 text-red-600 hover:text-red-700 hover:bg-red-50"
+                              title="Xóa"
+                              onClick={() => handleDeletePrediction(prediction.id)}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
                           </div>
                         </div>
                       </CardHeader>
-                      <CardContent>
-                        <div className="space-y-2">
-                          <Label className="text-sm font-semibold">Sản phẩm/Dịch vụ dự đoán:</Label>
-                          <div className="flex flex-wrap gap-2">
-                            {prediction.predictedProducts.map((product, pIdx) => (
-                              <Badge key={pIdx} variant="outline" className="bg-blue-50">
-                                <Package className="mr-1 h-3 w-3" />
-                                {product}
-                              </Badge>
-                            ))}
-                          </div>
+                      <CardContent className="pt-0">
+                        <div className="flex flex-wrap gap-1.5">
+                          {prediction.predictedProducts.map((product, pIdx) => (
+                            <Badge key={pIdx} variant="outline" className="bg-blue-50 font-normal">
+                              <Package className="mr-1 h-3 w-3" />
+                              {product}
+                            </Badge>
+                          ))}
                         </div>
                       </CardContent>
                     </Card>
@@ -716,6 +828,104 @@ export default function DemandForecast() {
               )}
             </CardContent>
           </Card>
+
+          <Dialog open={predictionDialogOpen} onOpenChange={setPredictionDialogOpen}>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>
+                  {editingPredictionId ? 'Sửa dự đoán' : 'Thêm dự đoán mới'}
+                </DialogTitle>
+                <DialogDescription>
+                  Nhập thông tin loại sản phẩm/dịch vụ dự đoán
+                </DialogDescription>
+              </DialogHeader>
+              <form onSubmit={handleSavePrediction}>
+                <div className="grid gap-4 py-4">
+                  <div className="grid gap-2">
+                    <Label htmlFor="p-category">Danh mục *</Label>
+                    <Input
+                      id="p-category"
+                      value={predictionForm.category}
+                      onChange={(e) =>
+                        setPredictionForm({ ...predictionForm, category: e.target.value })
+                      }
+                      placeholder="VD: Điện tử thông minh"
+                      required
+                    />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="p-products">Sản phẩm/Dịch vụ dự đoán *</Label>
+                    <Input
+                      id="p-products"
+                      value={predictionForm.predictedProducts}
+                      onChange={(e) =>
+                        setPredictionForm({ ...predictionForm, predictedProducts: e.target.value })
+                      }
+                      placeholder="Cách nhau bằng dấu phẩy, VD: SP A, SP B, SP C"
+                      required
+                    />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="p-confidence">Độ tin cậy (%)</Label>
+                    <Input
+                      id="p-confidence"
+                      type="number"
+                      min={0}
+                      max={100}
+                      value={predictionForm.confidence}
+                      onChange={(e) =>
+                        setPredictionForm({
+                          ...predictionForm,
+                          confidence: Number(e.target.value),
+                        })
+                      }
+                    />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="p-timeframe">Thời hạn</Label>
+                    <Select
+                      value={predictionForm.timeframe}
+                      onValueChange={(value: any) =>
+                        setPredictionForm({ ...predictionForm, timeframe: value })
+                      }
+                    >
+                      <SelectTrigger id="p-timeframe">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="short_term">Ngắn hạn</SelectItem>
+                        <SelectItem value="medium_term">Trung hạn</SelectItem>
+                        <SelectItem value="long_term">Dài hạn</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="p-reasoning">Lý do</Label>
+                    <Input
+                      id="p-reasoning"
+                      value={predictionForm.reasoning}
+                      onChange={(e) =>
+                        setPredictionForm({ ...predictionForm, reasoning: e.target.value })
+                      }
+                      placeholder="VD: Dựa trên xu hướng mua hàng..."
+                    />
+                  </div>
+                </div>
+                <DialogFooter>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setPredictionDialogOpen(false)}
+                  >
+                    Hủy
+                  </Button>
+                  <Button type="submit">
+                    {editingPredictionId ? 'Lưu' : 'Thêm'}
+                  </Button>
+                </DialogFooter>
+              </form>
+            </DialogContent>
+          </Dialog>
         </TabsContent>
       </Tabs>
     </div>

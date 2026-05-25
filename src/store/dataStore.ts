@@ -65,6 +65,10 @@ const initialInventory: InventoryItem[] = [
     minStock: 10,
     maxStock: 100,
     lastUpdated: new Date().toISOString(),
+    condition: 'new',
+    supplier: 'Dell Technologies',
+    reorderQuantity: 0,
+    barcode: '8801068939842',
   },
   {
     id: '2',
@@ -75,6 +79,10 @@ const initialInventory: InventoryItem[] = [
     minStock: 10,
     maxStock: 50,
     lastUpdated: new Date().toISOString(),
+    condition: 'good',
+    supplier: 'Công ty Nội thất Văn phòng',
+    reorderQuantity: 30,
+    barcode: '8934567102345',
   },
   {
     id: '3',
@@ -85,6 +93,11 @@ const initialInventory: InventoryItem[] = [
     minStock: 50,
     maxStock: 500,
     lastUpdated: new Date().toISOString(),
+    condition: 'good',
+    expiryDate: new Date(Date.now() + 180 * 24 * 60 * 60 * 1000).toISOString(),
+    supplier: 'Công ty Văn phòng phẩm',
+    reorderQuantity: 0,
+    barcode: '8909876543210',
   },
 ]
 
@@ -276,6 +289,12 @@ export const useDataStore = create<DataStore>((set, get) => ({
         status,
         location: item.location,
         lastMovement: item.lastUpdated,
+        condition: item.condition,
+        expiryDate: item.expiryDate,
+        supplier: item.supplier,
+        reorderQuantity: item.reorderQuantity,
+        auditCheck: item.auditCheck,
+        barcode: item.barcode,
       }
     })
   },
