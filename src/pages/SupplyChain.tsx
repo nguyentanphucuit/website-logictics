@@ -20,14 +20,22 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 
 export default function SupplyChain() {
   const supplyChain = useDataStore((state) => state.supplyChain)
   const updateSupplyChainStatus = useDataStore((state) => state.updateSupplyChainStatus)
   const currentUser = useAuthStore((state) => state.currentUser)
   const addAuditLog = useAuditStore((state) => state.addAuditLog)
-  const [statusFilter, setStatusFilter] = useState<string>('all')
+  const [searchParams] = useSearchParams()
+  const initialStatus = searchParams.get('status') || 'all'
+  const [statusFilter, setStatusFilter] = useState<string>(initialStatus)
+
+  useEffect(() => {
+    const fromUrl = searchParams.get('status')
+    if (fromUrl) setStatusFilter(fromUrl)
+  }, [searchParams])
 
   const handleExport = () => {
     exportSupplyChain(supplyChain)

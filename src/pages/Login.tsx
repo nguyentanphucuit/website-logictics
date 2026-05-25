@@ -55,7 +55,7 @@ export default function Login() {
         <CardHeader className="text-center">
           <CardTitle className="text-2xl">Đăng nhập</CardTitle>
           <CardDescription>
-            Hệ thống Quản lý Logistics
+            Hệ thống logistics kho và vận hành kho
           </CardDescription>
         </CardHeader>
         <CardContent>

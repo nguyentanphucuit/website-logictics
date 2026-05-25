@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { useDataStore } from '@/store/dataStore'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import {
@@ -138,8 +139,20 @@ const emptyForm: AuditForm = {
 }
 
 export default function WarehouseReports() {
-  const reports = useDataStore((state) => state.getWarehouseReports())
+  const allReports = useDataStore((state) => state.getWarehouseReports())
   const updateInventoryItem = useDataStore((state) => state.updateInventoryItem)
+  const [searchParams, setSearchParams] = useSearchParams()
+  const filter = searchParams.get('filter') // 'low_stock' | null
+
+  const reports =
+    filter === 'low_stock'
+      ? allReports.filter((r) => r.status === 'low_stock' || r.status === 'out_of_stock')
+      : allReports
+
+  const clearFilter = () => {
+    searchParams.delete('filter')
+    setSearchParams(searchParams)
+  }
 
   const [editingId, setEditingId] = useState<string | null>(null)
   const [form, setForm] = useState<AuditForm>(emptyForm)
@@ -240,6 +253,17 @@ export default function WarehouseReports() {
           Xuất Excel
         </Button>
       </div>
+
+      {filter === 'low_stock' && (
+        <div className="mb-4 flex items-center justify-between gap-3 bg-orange-50 border border-orange-200 rounded-lg px-4 py-3">
+          <div className="text-sm text-orange-800">
+            Đang lọc: <span className="font-semibold">Sản phẩm sắp hết / hết hàng</span> ({reports.length} sản phẩm)
+          </div>
+          <Button variant="ghost" size="sm" onClick={clearFilter} className="text-orange-700 hover:text-orange-900 hover:bg-orange-100">
+            Bỏ lọc
+          </Button>
+        </div>
+      )}
 
       <Tabs defaultValue="overview" className="w-full">
         <TabsList className="grid w-full grid-cols-2 max-w-md">

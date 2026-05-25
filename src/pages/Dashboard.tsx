@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom'
 import { useDataStore } from '@/store/dataStore'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Package, AlertTriangle, Truck, CheckCircle, Clock, TrendingUp } from 'lucide-react'
@@ -12,6 +13,7 @@ export default function Dashboard() {
       icon: Package,
       color: 'text-blue-600',
       bgColor: 'bg-blue-100',
+      href: '/data-management',
     },
     {
       title: 'Tổng tồn kho',
@@ -19,6 +21,7 @@ export default function Dashboard() {
       icon: TrendingUp,
       color: 'text-green-600',
       bgColor: 'bg-green-100',
+      href: '/warehouse-reports',
     },
     {
       title: 'Sản phẩm sắp hết',
@@ -26,6 +29,7 @@ export default function Dashboard() {
       icon: AlertTriangle,
       color: 'text-orange-600',
       bgColor: 'bg-orange-100',
+      href: '/warehouse-reports?filter=low_stock',
     },
     {
       title: 'Đơn hàng chờ xử lý',
@@ -33,6 +37,7 @@ export default function Dashboard() {
       icon: Clock,
       color: 'text-yellow-600',
       bgColor: 'bg-yellow-100',
+      href: '/supply-chain?status=pending',
     },
     {
       title: 'Đang vận chuyển',
@@ -40,6 +45,7 @@ export default function Dashboard() {
       icon: Truck,
       color: 'text-purple-600',
       bgColor: 'bg-purple-100',
+      href: '/supply-chain?status=in_transit',
     },
     {
       title: 'Đã giao',
@@ -47,6 +53,7 @@ export default function Dashboard() {
       icon: CheckCircle,
       color: 'text-green-600',
       bgColor: 'bg-green-100',
+      href: '/supply-chain?status=delivered',
     },
   ]
 
@@ -55,7 +62,7 @@ export default function Dashboard() {
       <div className="mb-4 sm:mb-8">
         <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Bảng điều khiển</h1>
         <p className="mt-2 text-xs sm:text-sm text-gray-600">
-          Tổng quan hệ thống quản lý kho & chuỗi cung ứng
+          Tổng quan hệ thống quản lý kho & chuỗi cung ứng — bấm vào ô để xem chi tiết
         </p>
       </div>
 
@@ -63,22 +70,22 @@ export default function Dashboard() {
         {statCards.map((stat) => {
           const Icon = stat.icon
           return (
-            <Card key={stat.title}>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-xs sm:text-sm font-medium">{stat.title}</CardTitle>
-                <div className={`${stat.bgColor} ${stat.color} p-1.5 sm:p-2 rounded-lg`}>
-                  <Icon className="h-3 w-3 sm:h-4 sm:w-4" />
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="text-xl sm:text-2xl font-bold">{stat.value}</div>
-              </CardContent>
-            </Card>
+            <Link key={stat.title} to={stat.href} className="block">
+              <Card className="cursor-pointer transition-all hover:shadow-md hover:border-primary/40 hover:-translate-y-0.5">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-xs sm:text-sm font-medium">{stat.title}</CardTitle>
+                  <div className={`${stat.bgColor} ${stat.color} p-1.5 sm:p-2 rounded-lg`}>
+                    <Icon className="h-3 w-3 sm:h-4 sm:w-4" />
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-xl sm:text-2xl font-bold">{stat.value}</div>
+                </CardContent>
+              </Card>
+            </Link>
           )
         })}
       </div>
     </div>
   )
 }
-
-

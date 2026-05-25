@@ -76,8 +76,8 @@ export default function Layout({ children }: LayoutProps) {
           {/* Logo */}
           <div className="flex items-center justify-between h-16 px-4 border-b border-gray-200">
             {!sidebarCollapsed && (
-              <h1 className="text-lg font-bold text-gray-900 whitespace-nowrap">
-                Hệ thống Logistics
+              <h1 className="text-sm font-bold text-gray-900 leading-tight">
+                Hệ thống logistics kho<br />và vận hành kho
               </h1>
             )}
             <div className="flex items-center gap-2">
