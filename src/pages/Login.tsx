@@ -88,13 +88,6 @@ export default function Login() {
                 placeholder="Nhập mật khẩu"
               />
             </div>
-            <div className="text-xs text-gray-500 space-y-1">
-              <p>Tài khoản demo:</p>
-              <p>• Admin: admin / admin123</p>
-              <p>• Kho trưởng: khotruong / kho123</p>
-              <p>• Nhân viên: nhanvien / nv123</p>
-              <p>• Kế toán: ketoan / kt123</p>
-            </div>
             <Button type="submit" className="w-full" disabled={loading}>
               {loading ? 'Đang đăng nhập...' : 'Đăng nhập'}
             </Button>
